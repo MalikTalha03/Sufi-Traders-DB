@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 11.0.3, 2023-11-11T23:10:13. -->
+<!-- Written by QtCreator 11.0.3, 2023-11-12T22:50:58. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -146,7 +146,6 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">mainwindow.py</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">PythonEditor.RunConfiguration.C:/Users/HP/Desktop/DB/FMCG Management/Sufi-Traders-DB/Customer/mainwindow.py</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">C:/Users/HP/Desktop/DB/FMCG Management/Sufi-Traders-DB/Customer/mainwindow.py</value>
-    <value type="QString" key="PythonEditor.RunConfiguation.Interpreter">{7e8de812-a002-4636-9c89-2461323f0fad}</value>
     <value type="QString" key="PythonEditor.RunConfiguation.Script">C:\Users\HP\Desktop\DB\FMCG Management\Sufi-Traders-DB\Customer\mainwindow.py</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>

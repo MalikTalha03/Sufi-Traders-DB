@@ -3,6 +3,7 @@
         "mainwindow.py",
         "form.ui",
         "addproduct.ui",
-        "addsupplier.ui"
+        "addsupplier.ui",
+        "supplierOrder.ui"
     ]
 }
