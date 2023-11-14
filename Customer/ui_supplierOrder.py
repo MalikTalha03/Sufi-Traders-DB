@@ -17,8 +17,9 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
-    QMainWindow, QMenu, QMenuBar, QSizePolicy,
-    QStatusBar, QTableWidget, QTableWidgetItem, QWidget)
+    QMainWindow, QMenu, QMenuBar, QPushButton,
+    QSizePolicy, QStatusBar, QTableWidget, QTableWidgetItem,
+    QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -64,7 +65,7 @@ class Ui_MainWindow(object):
         self.lineEdit_3.setGeometry(QRect(140, 60, 113, 24))
         self.lineEdit_4 = QLineEdit(self.centralwidget)
         self.lineEdit_4.setObjectName(u"lineEdit_4")
-        self.lineEdit_4.setEnabled(False)
+        self.lineEdit_4.setEnabled(True)
         self.lineEdit_4.setGeometry(QRect(510, 60, 113, 24))
         self.lineEdit_5 = QLineEdit(self.centralwidget)
         self.lineEdit_5.setObjectName(u"lineEdit_5")
@@ -89,18 +90,33 @@ class Ui_MainWindow(object):
         __qtablewidgetitem4 = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(4, __qtablewidgetitem4)
         self.tableWidget.setObjectName(u"tableWidget")
-        self.tableWidget.setGeometry(QRect(50, 200, 721, 341))
+        self.tableWidget.setGeometry(QRect(50, 190, 721, 341))
         self.lineEdit_8 = QLineEdit(self.centralwidget)
         self.lineEdit_8.setObjectName(u"lineEdit_8")
         self.lineEdit_8.setEnabled(False)
-        self.lineEdit_8.setGeometry(QRect(510, 140, 111, 41))
+        self.lineEdit_8.setGeometry(QRect(650, 120, 111, 41))
         self.label_8 = QLabel(self.centralwidget)
         self.label_8.setObjectName(u"label_8")
-        self.label_8.setGeometry(QRect(390, 150, 91, 16))
+        self.label_8.setGeometry(QRect(660, 90, 91, 16))
         font = QFont()
         font.setPointSize(12)
         font.setBold(True)
         self.label_8.setFont(font)
+        self.pushButton = QPushButton(self.centralwidget)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setGeometry(QRect(680, 530, 80, 24))
+        self.label_9 = QLabel(self.centralwidget)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setGeometry(QRect(390, 140, 61, 16))
+        self.lineEdit_9 = QLineEdit(self.centralwidget)
+        self.lineEdit_9.setObjectName(u"lineEdit_9")
+        self.lineEdit_9.setGeometry(QRect(510, 140, 113, 24))
+        self.label_10 = QLabel(self.centralwidget)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setGeometry(QRect(670, 20, 61, 16))
+        self.lineEdit_10 = QLineEdit(self.centralwidget)
+        self.lineEdit_10.setObjectName(u"lineEdit_10")
+        self.lineEdit_10.setGeometry(QRect(660, 50, 91, 24))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
@@ -144,6 +160,9 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem4.setText(QCoreApplication.translate("MainWindow", u"Total", None));
         self.lineEdit_8.setText("")
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Grand Total", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Proceed", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Category", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"OrderID", None))
         self.menuOptions.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
     # retranslateUi
 

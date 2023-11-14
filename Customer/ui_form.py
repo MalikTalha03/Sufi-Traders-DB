@@ -21,11 +21,7 @@ from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
     QSizePolicy, QStatusBar, QTableWidget, QTableWidgetItem,
     QWidget)
 
-
 class Ui_MainWindow(object):
-    def __init__(self):
-        self.total = 0  # initialize total in the __init__ method
-
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
@@ -41,17 +37,17 @@ class Ui_MainWindow(object):
         self.lineEdit_5.setGeometry(QRect(400, 70, 113, 24))
         self.label_7 = QLabel(self.centralwidget)
         self.label_7.setObjectName(u"label_7")
-        self.label_7.setGeometry(QRect(320, 40, 71, 16))
+        self.label_7.setGeometry(QRect(550, 70, 71, 16))
         self.label_5 = QLabel(self.centralwidget)
         self.label_5.setObjectName(u"label_5")
         self.label_5.setGeometry(QRect(20, 70, 71, 16))
         self.lineEdit_6 = QLineEdit(self.centralwidget)
         self.lineEdit_6.setObjectName(u"lineEdit_6")
         self.lineEdit_6.setEnabled(False)
-        self.lineEdit_6.setGeometry(QRect(400, 40, 113, 24))
+        self.lineEdit_6.setGeometry(QRect(640, 70, 113, 24))
         self.label_8 = QLabel(self.centralwidget)
         self.label_8.setObjectName(u"label_8")
-        self.label_8.setGeometry(QRect(620, 10, 71, 16))
+        self.label_8.setGeometry(QRect(550, 20, 71, 16))
         font = QFont()
         font.setPointSize(14)
         font.setBold(True)
@@ -65,7 +61,7 @@ class Ui_MainWindow(object):
         self.lineEdit_7 = QLineEdit(self.centralwidget)
         self.lineEdit_7.setObjectName(u"lineEdit_7")
         self.lineEdit_7.setEnabled(False)
-        self.lineEdit_7.setGeometry(QRect(620, 30, 113, 51))
+        self.lineEdit_7.setGeometry(QRect(640, 10, 113, 51))
         self.lineEdit_2 = QLineEdit(self.centralwidget)
         self.lineEdit_2.setObjectName(u"lineEdit_2")
         self.lineEdit_2.setGeometry(QRect(400, 10, 113, 24))
@@ -110,6 +106,12 @@ class Ui_MainWindow(object):
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
         self.pushButton.setGeometry(QRect(700, 530, 80, 24))
+        self.label_9 = QLabel(self.centralwidget)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setGeometry(QRect(320, 40, 71, 16))
+        self.lineEdit_8 = QLineEdit(self.centralwidget)
+        self.lineEdit_8.setObjectName(u"lineEdit_8")
+        self.lineEdit_8.setGeometry(QRect(400, 40, 113, 24))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
@@ -124,34 +126,12 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuOptions.menuAction())
         self.menuOptions.addAction(self.actionAdd_Order)
         self.menuOptions.addAction(self.actionFiond_Order)
-        self.lineEdit_5.returnPressed.connect(self.addNewRow)
 
         self.retranslateUi(MainWindow)
 
         QMetaObject.connectSlotsByName(MainWindow)
     # setupUi
-   
-    def addNewRow(self):
-        # Get data from line edits
-        product_id = self.lineEdit_4.text()
-        quantity = self.lineEdit_5.text()
 
-        # Add a new row to the table widget
-        row_position = self.tableWidget.rowCount()
-        self.tableWidget.insertRow(row_position)
-        self.tableWidget.setItem(row_position, 0, QTableWidgetItem(product_id))
-        self.tableWidget.setItem(row_position, 3, QTableWidgetItem(quantity))
-        
-        product_price = 330  # price will be fetched from db
-        self.total += product_price * int(quantity)  # updating total
-        totalprice = product_price * int(quantity)  # calculating per item total
-        self.tableWidget.setItem(row_position, 4, QTableWidgetItem(str(totalprice)))
-        self.lineEdit_7.setText(str(self.total))
-
-        # Clear the line edits
-        self.lineEdit.clear()
-        self.lineEdit_4.clear()
-    
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.actionAdd_Order.setText(QCoreApplication.translate("MainWindow", u"Add Order", None))
@@ -174,6 +154,7 @@ class Ui_MainWindow(object):
         ___qtablewidgetitem4.setText(QCoreApplication.translate("MainWindow", u"Total", None));
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Last name", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Proceed", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Customer ID", None))
         self.menuOptions.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
     # retranslateUi
 

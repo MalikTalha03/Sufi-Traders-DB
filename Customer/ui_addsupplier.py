@@ -17,8 +17,8 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QLabel, QLineEdit, QMainWindow,
-    QMenu, QMenuBar, QSizePolicy, QStatusBar,
-    QWidget)
+    QMenu, QMenuBar, QPushButton, QSizePolicy,
+    QStatusBar, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -55,6 +55,9 @@ class Ui_MainWindow(object):
         self.lineEdit_4 = QLineEdit(self.centralwidget)
         self.lineEdit_4.setObjectName(u"lineEdit_4")
         self.lineEdit_4.setGeometry(QRect(380, 270, 113, 24))
+        self.pushButton = QPushButton(self.centralwidget)
+        self.pushButton.setObjectName(u"pushButton")
+        self.pushButton.setGeometry(QRect(460, 330, 80, 24))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
@@ -83,6 +86,7 @@ class Ui_MainWindow(object):
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Supplier Name", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Supplier Contact", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Supplier Address", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Add", None))
         self.menuOptions.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
     # retranslateUi
 

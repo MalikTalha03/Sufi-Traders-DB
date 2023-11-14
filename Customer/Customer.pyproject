@@ -4,6 +4,7 @@
         "form.ui",
         "addproduct.ui",
         "addsupplier.ui",
-        "supplierOrder.ui"
+        "supplierOrder.ui",
+        "addcatedory.ui"
     ]
 }
