@@ -42,12 +42,12 @@
      <rect>
       <x>20</x>
       <y>70</y>
-      <width>71</width>
+      <width>81</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>Product ID</string>
+     <string>Product Name</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="lineEdit_6">

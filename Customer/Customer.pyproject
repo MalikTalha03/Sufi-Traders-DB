@@ -5,6 +5,7 @@
         "addproduct.ui",
         "addsupplier.ui",
         "supplierOrder.ui",
-        "addcatedory.ui"
+        "addcatedory.ui",
+        "supporderdetail.ui"
     ]
 }
