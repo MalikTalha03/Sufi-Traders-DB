@@ -25,9 +25,10 @@ totalCredit decimal(10, 2) Not Null
 
 Create Table Customer_Order(
 orderID int Primary Key,
-orderTime timestamp Not Null,
 customerID int Foreign Key References Customers(customerID) Not Null,
-employeeID int Foreign Key References Employee(employeeID) Not Null
+employeeID int Foreign Key References Employee(employeeID) Not Null,
+orderDate DATE Not Null,
+orderTime TIME Not Null
 );
 
 Create Table Categories(
