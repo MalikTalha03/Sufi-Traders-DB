@@ -27,6 +27,9 @@ from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
 
 class Ui_MainWindow(object):
     def __init__(self):
+        self.row_details = []
+        self.category_data = {}
+        self.order_id = 0
         self.total = 0  # initialize total in the __init__ method
         self.cnxn_str = (
             "Driver={SQL Server};"
@@ -34,7 +37,40 @@ class Ui_MainWindow(object):
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
+        self.orderid()
+        from ui_orderdetail import SignalEmitter
+        self.signal_emitter = SignalEmitter()
+        self.signal_emitter.reset_variables_signal.connect(self.reset_variables)
+    
+    def orderid(self):
+        try:
+            # Assign the connection to cnxn
+            cnxn = pyodbc.connect(self.cnxn_str)
+            with cnxn.cursor() as cursor:
+                cursor.execute("SELECT MAX(orderID) FROM Customer_Order")
+                max_order_id = cursor.fetchone()[0]
 
+                if max_order_id is not None:
+                    self.order_id = int(max_order_id) + 1
+                else:
+                    # If the table is empty, start with order ID 1
+                    self.order_id = 1
+
+        except pyodbc.Error as ex:
+            # Handle the exception and inform the user
+            print("Database Error")
+        finally:
+            # Close the connection in the finally block
+            if cnxn:
+                cnxn.close()
+                print("Connection closed.")
+
+
+    def reset_variables(self):
+        self.close()
+        print("closing....")
+
+        
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
@@ -136,13 +172,16 @@ class Ui_MainWindow(object):
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.lineEdit_6.setText("{}".format(self.order_id))
 
+        
         self.menubar.addAction(self.menuOptions.menuAction())
         self.menuOptions.addAction(self.actionAdd_Order)
         self.menuOptions.addAction(self.actionFiond_Order)
         self.lineEdit_4.returnPressed.connect(self.move)
         self.lineEdit_5.returnPressed.connect(self.addNewRow)
         self.lineEdit_3.returnPressed.connect(self.handle_lineEdit3_enter) #listen enter
+        self.pushButton.clicked.connect(self.open_details_window)
 
         self.retranslateUi(MainWindow)
 
@@ -150,6 +189,7 @@ class Ui_MainWindow(object):
     # setupUi
     def move(self):
         self.lineEdit_5.setFocus()
+
     def addNewRow(self):
         # Get data from line edits
         product_name = self.lineEdit_4.text()
@@ -168,6 +208,7 @@ class Ui_MainWindow(object):
                         self.tableWidget.setItem(row_position, 1, QTableWidgetItem(str(row[1])))
                         self.tableWidget.setItem(row_position, 3, QTableWidgetItem(quantity))
                         self.tableWidget.setItem(row_position, 2, QTableWidgetItem(str(row[2])))
+
                         
                         product_price = row[2]  # price will be fetched from db
                         self.total += product_price * int(quantity)  # updating total
@@ -175,6 +216,15 @@ class Ui_MainWindow(object):
                         self.tableWidget.setItem(row_position, 4, QTableWidgetItem(str(totalprice)))
                         self.lineEdit_7.setText(str(self.total))
 
+                        row_detail = {
+                            'pid': row[0],
+                            'pname': row[1],
+                            'quantity': quantity,
+                            'total_price': totalprice,
+                            'price':row[2]
+                        }
+                        self.row_details.append(row_detail)
+                        print(self.row_details)
                         # Clear the line edits
                         self.lineEdit_5.clear()
                         self.lineEdit_4.clear()
@@ -260,6 +310,12 @@ class Ui_MainWindow(object):
                 cnxn.close()
                 print("Connection closed.")
             # Add your logic here
+
+    def open_details_window(self):
+        from ui_orderdetail import Ui_MainWin
+        data_to_pass = self.row_details  # Assuming row_details is the data you want to pass
+        self.details_window = Ui_MainWin(data_to_pass,self.order_id,self.lineEdit_8.text(),self.total)
+        self.details_window.show()
 
 
 
