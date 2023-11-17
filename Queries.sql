@@ -86,7 +86,8 @@ transactionType varchar(15) Not Null
 CONSTRAINT chk_transaction CHECK (transactionType IN ('Cash', 'Credit', 'Bank Transfer')),
 totalAmount decimal(10, 2) Not Null,
 orderID int Foreign Key References Customer_Order(orderID) Not Null,
-transactionTime timestamp Not Null
+transactionDate Date Not Null,
+transactionTime TIME Not Null
 
 );
 

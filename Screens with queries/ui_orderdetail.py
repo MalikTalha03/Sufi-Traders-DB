@@ -20,9 +20,10 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
     QMainWindow, QMenu, QMenuBar, QPushButton,
     QSizePolicy, QStatusBar, QTableWidget, QTableWidgetItem,
-    QWidget)
+    QWidget,QMessageBox)
 from ui_form  import Ui_MainWindow as DetailsWindow
 from PyQt5.QtCore import QObject, pyqtSignal
+from ui_paymentcust import UI_Payment 
 
 class SignalEmitter(QObject):
     reset_variables_signal = pyqtSignal()
@@ -177,6 +178,9 @@ class Ui_MainWin(QMainWindow, DetailsWindow):
                                        self.orderno,data['pid'],data['quantity'])
                 cursor.commit()
             # Clear the list after successfully adding to the database
+            self.openwin()
+            
+
             self.total = 0
             self.data = []
             self.suppid=0
@@ -185,14 +189,25 @@ class Ui_MainWin(QMainWindow, DetailsWindow):
             self.close()
         except pyodbc.Error as ex:
             # Handle the exception and inform the user
-            print("Database Error: ?", ex)
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: ?",ex)
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            result = msg_box.exec_()
         finally:
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-                print("Connection closed.")
 
     def emit_reset_variables_signal(self):
         # Emit the reset variables signal
         self.signal_emitter.reset_variables_signal.emit()
+
+    def openwin(self):
+        self.win = QMainWindow()
+        self.ui = UI_Payment()
+        self.ui.setupUi(self.win)
+        self.ui.setValues(self.order_id,self.total,self.cid)
+        self.win.show()
 

@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 from ui_form import Ui_MainWindow
 from ui_addsupplier import Ui_MainWindow as Ui_AddSupplier  # Import the Ui_MainWindow class from ui_addsupplier.py
 from ui_addcatedory import Ui_Form as category
-from ui_supplierOrder import Ui_MainWindow as supporder
+from ui_supplierOrder import Ui_MainWindow as supporder 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
