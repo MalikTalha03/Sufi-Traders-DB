@@ -14,7 +14,7 @@ from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
 from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
+    QPalette, QPixmap, QRadialGradient, QTransform,QCloseEvent)
 from PySide6.QtWidgets import (QApplication, QComboBox, QLabel, QLineEdit,
     QMainWindow, QMenuBar, QPushButton, QSizePolicy,
     QStatusBar, QWidget,QMessageBox)
@@ -95,7 +95,7 @@ class UI_Payment(QMainWindow):
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.pushButton.clicked.connect(self.pay)
+        self.pushButton.clicked.connect(self.payment)
 
         self.retranslateUi(MainWindow)
 
@@ -137,8 +137,13 @@ class UI_Payment(QMainWindow):
                     cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
                                    new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
 
-                    # Show success message
-                    print("pay success")
+                    self.close_window()
+                    msg_box = QMessageBox()
+                    msg_box.setWindowTitle("Payment Successful")
+                    msg_box.setText("Payment completed successfully.")
+                    msg_box.setIcon(QMessageBox.Information)
+                    msg_box.setStandardButtons(QMessageBox.Ok)
+                    result = msg_box.exec_()
                     
 
                 elif entered_amount < self.total:
@@ -202,19 +207,9 @@ class UI_Payment(QMainWindow):
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-
-    def pay(self):
-        self.payment()
-        self.comboBox.clear()
-        self.comboBox.close()
+    def close_window(self):
         self.close()
-        print("CLSOEEEEE")
+        self.destroy()
+        self.closeEvent(QCloseEvent)
 
-    def closeEvent(self, event):
-        # Override the closeEvent method to handle the close event
-        self.comboBox.clear()
-        self.comboBox.close()
-        print("Closing Payment Window")
-        self.close()
-        event.accept()
-
+    
