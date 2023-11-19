@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
     QMainWindow, QMenu, QMenuBar, QPushButton,
     QSizePolicy, QStatusBar, QTableWidget, QTableWidgetItem,
     QWidget)
+import pyodbc
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):

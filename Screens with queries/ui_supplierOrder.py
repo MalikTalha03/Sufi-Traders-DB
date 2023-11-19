@@ -39,9 +39,6 @@ class Ui_MainWindow(object):
         self.signal_emitter.reset_variables_signal.connect(self.reset_variables)
 
 
-    def reset_variables(self):
-        self.close()
-        print("closing....")
 
 
     def open_details_window(self):
