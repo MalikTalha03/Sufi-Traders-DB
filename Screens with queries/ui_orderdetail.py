@@ -25,11 +25,9 @@ from ui_form  import Ui_MainWindow as DetailsWindow
 from PyQt5.QtCore import QObject, pyqtSignal
 from ui_paymentcust import UI_Payment 
 
-class SignalEmitter(QObject):
-    reset_variables_signal = pyqtSignal()
 
 
-class Ui_MainWin(QMainWindow, DetailsWindow):
+class Ui_MainWin(QMainWindow):
     def __init__(self, data,order,custid,total):
         super(Ui_MainWin, self).__init__()
         self.setupUi(self)
@@ -179,13 +177,11 @@ class Ui_MainWin(QMainWindow, DetailsWindow):
                 cursor.commit()
             # Clear the list after successfully adding to the database
             self.openwin()
-            
-
+        
             self.total = 0
             self.data = []
             self.suppid=0
             self.orderno=0
-            self.emit_reset_variables_signal()
             self.close()
         except pyodbc.Error as ex:
             # Handle the exception and inform the user
@@ -200,14 +196,12 @@ class Ui_MainWin(QMainWindow, DetailsWindow):
             if cnxn:
                 cnxn.close()
 
-    def emit_reset_variables_signal(self):
-        # Emit the reset variables signal
-        self.signal_emitter.reset_variables_signal.emit()
 
     def openwin(self):
         self.win = QMainWindow()
         self.ui = UI_Payment()
         self.ui.setupUi(self.win)
-        self.ui.setValues(self.order_id,self.total,self.cid)
+        self.ui.setValues(self.orderno,self.total,self.cid)
         self.win.show()
+
 

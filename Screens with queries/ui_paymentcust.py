@@ -36,6 +36,7 @@ class UI_Payment(QMainWindow):
         
 
     def setValues(self,orderno,total,cid):
+        
         self.orderno = orderno
         self.total = total
         self.cid = cid
@@ -65,11 +66,9 @@ class UI_Payment(QMainWindow):
         self.lineEdit_7.setGeometry(QRect(330, 70, 113, 51))
         self.lineEdit_8 = QLineEdit(self.centralwidget)
         self.lineEdit_8.setObjectName(u"lineEdit_8")
-        self.lineEdit_8.setEnabled(False)
         self.lineEdit_8.setGeometry(QRect(200, 130, 71, 24))
         self.lineEdit_6 = QLineEdit(self.centralwidget)
         self.lineEdit_6.setObjectName(u"lineEdit_6")
-        self.lineEdit_6.setEnabled(False)
         self.lineEdit_6.setGeometry(QRect(140, 80, 71, 24))
         self.comboBox = QComboBox(self.centralwidget)
         self.comboBox.addItem("")
@@ -96,6 +95,7 @@ class UI_Payment(QMainWindow):
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.pushButton.clicked.connect(self.payment)
+        self.lineEdit_6.returnPressed.connect(self.findorder)
 
         self.retranslateUi(MainWindow)
 
@@ -115,6 +115,7 @@ class UI_Payment(QMainWindow):
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Total", None))
     # retranslateUi
     def payment(self):
+        cnxn = None
         payment_method = self.comboBox.currentText()
         entered_amount = float(self.lineEdit_8.text())
 
@@ -137,18 +138,19 @@ class UI_Payment(QMainWindow):
                     cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
                                    new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
 
-                    self.close_window()
                     msg_box = QMessageBox()
                     msg_box.setWindowTitle("Payment Successful")
                     msg_box.setText("Payment completed successfully.")
                     msg_box.setIcon(QMessageBox.Information)
                     msg_box.setStandardButtons(QMessageBox.Ok)
                     result = msg_box.exec_()
+                    self.close()
+                    self.cleardata()
                     
 
                 elif entered_amount < self.total:
                     # Check if customer is in credit table
-                    cursor.execute("SELECT * FROM Credit_Customers WHERE customerID = ?", self.custid)
+                    cursor.execute("SELECT * FROM Credit_Customers WHERE customerID = ?", self.cid)
                     credit_row = cursor.fetchone()
 
                     if credit_row:
@@ -162,7 +164,7 @@ class UI_Payment(QMainWindow):
                         new_credit_customer_id = max_id + 1
                         # Add a new entry in the credit table
                         cursor.execute("INSERT INTO Credit_Customers VALUES (?, ?, ?)",
-                                       new_credit_customer_id,self.custid, (self.total - entered_amount))
+                                       new_credit_customer_id,self.cid, (self.total - entered_amount))
                         
                     order_date = datetime.now().date().strftime('%Y-%m-%d')
                     order_time = datetime.now().time().strftime('%H:%M:%S')
@@ -176,13 +178,13 @@ class UI_Payment(QMainWindow):
                                    new_tid+1,"Credit",(self.total - entered_amount),self.orderno,order_date,order_time )
 
                     # Show success message
-                    self.close_window()
                     msg_box = QMessageBox()
                     msg_box.setWindowTitle("Payment Successful")
                     msg_box.setText("Partial payment completed successfully.")
                     msg_box.setIcon(QMessageBox.Information)
                     msg_box.setStandardButtons(QMessageBox.Ok)
                     result = msg_box.exec_()
+                    self.cleardata()
                     
 
                 else:
@@ -207,9 +209,61 @@ class UI_Payment(QMainWindow):
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-    def close_window(self):
-        self.close()
-        self.destroy()
-        self.closeEvent(QCloseEvent)
+
+
+    def cleardata(self):
+        self.lineEdit_6.clear()
+        self.lineEdit_7.clear()
+        self.lineEdit_8.clear()
+        self.comboBox.clear()
+        self.pushButton.setEnabled(False)
+
+    def findorder(self):
+        cnxn = None
+        id = self.lineEdit_6.text()
+        self.lineEdit_6.setEnabled(False)
+        total = 0
+        totalpaid = 0
+        try:
+            # Assign the connection to cnxn
+            cnxn = pyodbc.connect(self.cnxn_str)
+            with cnxn.cursor() as cursor:
+                cursor.execute("Select * from Customer_Order_Details Where orderId=?",id)
+                rows = cursor.fetchall()
+                for row in rows:
+                    prodtot = 0
+                    pid=row[1]
+                    quantity= row[2]
+                    cursor.execute("Select * from Products Where productID = ?",pid)
+                    prodprice=cursor.fetchone()[2]
+                    prodtot = int(quantity) * int(prodprice)
+                    total = total + prodtot
+                self.lineEdit_7.setText(str(total))
+                cursor.execute("SELECT * FROM Customer_Transactions WHERE orderID = ? AND transactionType IN (?, ?)", (id, 'Cash', 'Bank Transfer'))
+                rows = cursor.fetchall()
+                for row in rows:
+                    totalpaid = totalpaid + row[2]
+                rem = total -totalpaid
+                if rem == 0 :
+                    self.lineEdit_8.setText(str(rem))
+                    self.pushButton.setEnabled(False)
+                else:
+                    self.lineEdit_8.setText(str(rem))
+                cursor.execute("Select * from Customer_Order Where orderID=?",id)
+                self.cid = cursor.fetchone()[1]
+            self.orderno = id
+            self.total = total
+        except pyodbc.Error as ex:
+            # Handle the exception and inform the user
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: ?",ex)
+            msg_box.setIcon(QMessageBox.Critical)
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            result = msg_box.exec_()
+        finally:
+            # Close the connection in the finally block
+            if cnxn:
+                cnxn.close()
 
     

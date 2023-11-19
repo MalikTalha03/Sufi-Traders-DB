@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
     QWidget)
 
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QMainWindow):
     def __init__(self):
         self.row_details = []
         self.category_data = {}
@@ -38,9 +38,6 @@ class Ui_MainWindow(object):
             "Trusted_Connection=yes;"
         )
         self.orderid()
-        from ui_orderdetail import SignalEmitter
-        self.signal_emitter = SignalEmitter()
-        self.signal_emitter.reset_variables_signal.connect(self.reset_variables)
     
     def orderid(self):
         cnxn = None
@@ -69,11 +66,10 @@ class Ui_MainWindow(object):
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-                print("Connection closed.")
 
 
     def reset_variables(self):
-        self.close()
+        
         print("closing....")
 
         
@@ -364,9 +360,14 @@ class Ui_MainWindow(object):
 
     def open_details_window(self):
         from ui_orderdetail import Ui_MainWin
-        data_to_pass = self.row_details  # Assuming row_details is the data you want to pass
-        self.details_window = Ui_MainWin(data_to_pass,self.order_id,self.lineEdit_8.text(),self.total)
-        self.details_window.show()
+        self.win = QMainWindow()
+        data = self.row_details  # Assuming row_details is the data you want to pass
+        self.ui = Ui_MainWin(data,self.order_id,self.lineEdit_8.text(),self.total)
+        self.ui.setupUi(self.win)
+        self.ui.show()
+
+    def closewin(self):
+        self.close()
 
 
 

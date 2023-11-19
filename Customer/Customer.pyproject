@@ -9,6 +9,9 @@
         "supporderdetail.ui",
         "orderdetail.ui",
         "custpay.ui",
-        "paymentcust.ui"
+        "paymentcust.ui",
+        "paysupplier.ui",
+        "findcustorder.ui",
+        "addemployee.ui"
     ]
 }

@@ -26,7 +26,6 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.total = 0  
         self.suppid = 0
-        self.orderno = 0
         self.row_details = []
         self.category_data = {}
         self.cnxn_str = (
@@ -48,7 +47,7 @@ class Ui_MainWindow(object):
     def open_details_window(self):
         from ui_supporderdetail import Ui_Window
         data_to_pass = self.row_details  # Assuming row_details is the data you want to pass
-        self.details_window = Ui_Window(data_to_pass,self.suppid,self.orderno,self.total)
+        self.details_window = Ui_Window(data_to_pass,self.suppid,self.total)
         self.details_window.show()
 
     def setupUi(self, MainWindow):
@@ -139,12 +138,6 @@ class Ui_MainWindow(object):
         self.label_9 = QLabel(self.centralwidget)
         self.label_9.setObjectName(u"label_9")
         self.label_9.setGeometry(QRect(390, 140, 61, 16))
-        self.label_10 = QLabel(self.centralwidget)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setGeometry(QRect(670, 20, 61, 16))
-        self.lineEdit_10 = QLineEdit(self.centralwidget)
-        self.lineEdit_10.setObjectName(u"lineEdit_10")
-        self.lineEdit_10.setGeometry(QRect(660, 50, 91, 24))
         self.comboBox = QComboBox(self.centralwidget)
         self.comboBox.addItem("")
         self.comboBox.setObjectName(u"comboBox")
@@ -213,7 +206,6 @@ class Ui_MainWindow(object):
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"Grand Total", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Proceed", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"Category", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"OrderID", None))
 
         self.menuOptions.setTitle(QCoreApplication.translate("MainWindow", u"Options", None))
     # retranslateUi
@@ -300,7 +292,6 @@ class Ui_MainWindow(object):
             inv = int(self.lineEdit_7.text())
             self.suppid = self.lineEdit.text()
             purprice = float(self.lineEdit_5.text())
-            self.orderno = self.lineEdit_10.text()
             selected_category_name = self.comboBox.currentText()
             cid = self.category_data.get(selected_category_name, "Unknown Category")
             total_price = purprice * inv

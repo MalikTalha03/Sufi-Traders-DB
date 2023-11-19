@@ -17,9 +17,10 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QHeaderView, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
-    QTableWidget, QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QHeaderView, QLabel, QLineEdit,
+    QMainWindow, QMenu, QMenuBar, QPushButton,
+    QSizePolicy, QStatusBar, QTableWidget, QTableWidgetItem,
+    QWidget)
 from ui_supplierOrder import Ui_MainWindow as DetailsWindow
 
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -29,13 +30,12 @@ class SignalEmitter(QObject):
 
 
 class Ui_Window(QMainWindow, DetailsWindow):
-    def __init__(self, data,suppid,orderno,total):
+    def __init__(self, data,suppid,total):
         super(Ui_Window, self).__init__()
         self.setupUi(self)
         self.total = total
         self.data = data
         self.suppid=suppid
-        self.orderno=orderno
         self.populate_table()
         self.cnxn_str = (
             "Driver={SQL Server};"
@@ -43,7 +43,34 @@ class Ui_Window(QMainWindow, DetailsWindow):
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
+        self.id = 0
+        self.orderno()
 
+    def orderno(self):
+        cnxn = None
+        try:
+            # Assign the connection to cnxn
+            cnxn = pyodbc.connect(self.cnxn_str)
+            with cnxn.cursor() as cursor:
+                cursor.execute("Select MAX(orderID) From Supplier_Order")
+                max_order_id = cursor.fetchone()[0]
+
+                if max_order_id is not None:
+                    self.id = int(max_order_id) + 1
+                else:
+                    # If the table is empty, start with order ID 1
+                    self.id = 1
+                self.lineEdit.setText(str(self.id))
+                self.lineEdit.setEnabled(False)
+                
+        except pyodbc.Error as ex:
+            # Handle the exception and inform the user
+            print("Database Error: ?", ex)
+        finally:
+            # Close the connection in the finally block
+            if cnxn:
+                cnxn.close()
+                print("Connection closed.")
 
     def populate_table(self):
     # Assuming that self.data is a list of dictionaries
@@ -84,10 +111,16 @@ class Ui_Window(QMainWindow, DetailsWindow):
         __qtablewidgetitem5 = QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(5, __qtablewidgetitem5)
         self.tableWidget.setObjectName(u"tableWidget")
-        self.tableWidget.setGeometry(QRect(20, 20, 721, 471))
+        self.tableWidget.setGeometry(QRect(20, 40, 721, 471))
         self.pushButton = QPushButton(self.centralwidget)
         self.pushButton.setObjectName(u"pushButton")
-        self.pushButton.setGeometry(QRect(650, 510, 80, 24))
+        self.pushButton.setGeometry(QRect(650, 520, 80, 24))
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
+        self.label.setGeometry(QRect(30, 10, 51, 16))
+        self.lineEdit = QLineEdit(self.centralwidget)
+        self.lineEdit.setObjectName(u"lineEdit")
+        self.lineEdit.setGeometry(QRect(110, 10, 113, 24))
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
@@ -101,6 +134,7 @@ class Ui_Window(QMainWindow, DetailsWindow):
 
         self.menubar.addAction(self.menuOption.menuAction())
         self.menuOption.addAction(self.actionAdd)
+
         self.pushButton.clicked.connect(self.addtodb)
 
         self.retranslateUi(MainWindow)
@@ -124,6 +158,7 @@ class Ui_Window(QMainWindow, DetailsWindow):
         ___qtablewidgetitem5 = self.tableWidget.horizontalHeaderItem(5)
         ___qtablewidgetitem5.setText(QCoreApplication.translate("MainWindow", u"Total", None));
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Add", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Order No", None))
         self.menuOption.setTitle(QCoreApplication.translate("MainWindow", u"Option", None))
     # retranslateUi
 
@@ -133,7 +168,7 @@ class Ui_Window(QMainWindow, DetailsWindow):
             # Assign the connection to cnxn
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
-                cursor.execute("Insert into Supplier_Order Values (?,?,?,?)", self.orderno,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total)
+                cursor.execute("Insert into Supplier_Order Values (?,?,?,?)", self.id,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total)
                 for data in self.data:
                     # Check if the product already exists
                     cursor.execute(
@@ -151,7 +186,7 @@ class Ui_Window(QMainWindow, DetailsWindow):
                             new_quantity, new_price, data['pid']
                         )
                         cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)",
-                                       self.orderno,data['pid'],data['purprice'],data['inv'])
+                                       self.id,data['pid'],data['purprice'],data['inv'])
                     else:
                         # Product doesn't exist, insert a new record
                         cursor.execute(
@@ -160,7 +195,7 @@ class Ui_Window(QMainWindow, DetailsWindow):
                             data['cid'], self.suppid, data['inv']
                         )
                         cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)",
-                                       self.orderno,data['pid'],data['purprice'],data['inv'])
+                                       self.id,data['pid'],data['purprice'],data['inv'])
                 cursor.commit()
             # Clear the list after successfully adding to the database
             self.total = 0
