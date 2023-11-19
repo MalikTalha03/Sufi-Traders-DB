@@ -126,10 +126,9 @@ class Ui_MainWindow(object):
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle("Payment Successful")
                     msg_box.setText("Payment completed successfully.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Information)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    result = msg_box.exec_()
-                    self.close()
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
                     self.cleardata()
                     
 
@@ -166,9 +165,9 @@ class Ui_MainWindow(object):
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle("Payment Successful")
                     msg_box.setText("Partial payment completed successfully.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Information)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    result = msg_box.exec_()
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
                     self.cleardata()
                     
 
@@ -177,9 +176,9 @@ class Ui_MainWindow(object):
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle("Payment Error")
                     msg_box.setText("Entered amount exceeds the total.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    result = msg_box.exec_()
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
                     
                 
         except pyodbc.Error as ex:
@@ -187,9 +186,9 @@ class Ui_MainWindow(object):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: ?",ex)
-            msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
@@ -243,9 +242,9 @@ class Ui_MainWindow(object):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: ?",ex)
-            msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:

@@ -126,8 +126,9 @@ class Ui_MainWindow(object):
 
         self.lineEdit_4.returnPressed.connect(self.move)
         self.lineEdit_5.returnPressed.connect(self.addNewRow)
-        self.lineEdit_3.returnPressed.connect(self.handle_lineEdit3_enter) #listen enter
-        self.pushButton.clicked.connect(self.open_details_window)
+        self.lineEdit_3.returnPressed.connect(self.handle_lineEdit3_enter) 
+        self.lineEdit_3.setFocus()
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -178,9 +179,9 @@ class Ui_MainWindow(object):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.MessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
@@ -243,16 +244,16 @@ class Ui_MainWindow(object):
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle("Error")
                     msg_box.setText("No Product found against Name: {}".format(product_name))
-                    msg_box.setIcon(QtWidgets.MessageBox.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    result = msg_box.exec_()
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
         except pyodbc.Error as ex:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.MessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
@@ -284,7 +285,6 @@ class Ui_MainWindow(object):
         }
         self.row_details.append(row_detail)
 
-        print(self.row_details)
         # Clear the line edits
         self.lineEdit_5.clear()
         self.lineEdit_4.clear()
@@ -294,8 +294,8 @@ class Ui_MainWindow(object):
         msg_box = QtWidgets.QMessageBox()
         msg_box.setWindowTitle("Stock Issue")
         msg_box.setText("Stock Not available.\n{} pieces available in stock".format(available_stock))
-        msg_box.setIcon(QtWidgets.QMessageBox.Information)
-        msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
 
         result = msg_box.exec_()
     def handle_lineEdit3_enter(self):
@@ -322,24 +322,14 @@ class Ui_MainWindow(object):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.MessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
 
-    def open_details_window(self):
-        from orderdetail import Ui_MainWin
-        self.win = QtWidgets.QMainWindow()
-        data = self.row_details  
-        self.ui = Ui_MainWin(data,self.order_id,self.lineEdit_8.text(),self.total)
-        self.ui.setupUi(self.win)
-        self.ui.show()
-
-    def closewin(self):
-        self.close()
 
 
 if __name__ == "__main__":

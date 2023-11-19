@@ -172,22 +172,18 @@ class Ui_MainWindow(object):
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle("Order Error")
                     msg_box.setText("No Order Found against ID : {}".format(id))
-                    msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-                    result = msg_box.exec_()
-                            
-                
-                
-
-                
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
+  
         except pyodbc.Error as ex:
             # Handle the exception and inform the user
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:

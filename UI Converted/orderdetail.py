@@ -12,18 +12,18 @@ from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
 
 class Ui_MainWindow(object):
-    def __init__(self, data,order,custid,total):
-        self.total = total
-        self.data = data
-        self.cid=custid
-        self.orderno=order
-        self.populate_table()
+    def __init__(self):
+        self.total = 0
+        self.data = {}
+        self.cid=0
+        self.orderno=0
         self.cnxn_str = (
             "Driver={SQL Server};"
             "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -86,6 +86,7 @@ class Ui_MainWindow(object):
         self.menuoptions.addAction(self.actionadd)
         self.menubar.addAction(self.menuoptions.menuAction())
         self.pushButton.clicked.connect(self.addtodb)
+        self.populate_table()
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -159,14 +160,13 @@ class Ui_MainWindow(object):
             self.data = []
             self.suppid=0
             self.orderno=0
-            self.close()
         except pyodbc.Error as ex:
             # Handle the exception and inform the user
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: ?",ex)
-            msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec_()
         finally:
             # Close the connection in the finally block
@@ -180,6 +180,12 @@ class Ui_MainWindow(object):
         self.ui.setupUi(self.win)
         self.ui.setValues(self.orderno,self.total,self.cid)
         self.win.show()
+
+    def setValues(self, data,order,custid,total):
+        self.total = total
+        self.data = data
+        self.cid=custid
+        self.orderno=order
 
 
 if __name__ == "__main__":
