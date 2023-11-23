@@ -28,7 +28,9 @@ orderID int Primary Key,
 customerID int Foreign Key References Customers(customerID) Not Null,
 employeeID int Foreign Key References Employee(employeeID) Not Null,
 orderDate DATE Not Null,
-orderTime TIME Not Null
+orderTime TIME Not Null,
+paymentStatus varchar(15) Not Null
+CONSTRAINT paystat CHECK (paymentStatus IN ('Paid', 'Credit','Partially Paid'))
 );
 
 Create Table Categories(
@@ -53,7 +55,9 @@ Create Table Supplier_Order(
 orderID int Primary Key,
 orderDate date Not Null,
 supplierID int Foreign Key References Supplier(supplierID) Not Null,
-totalAmount decimal(10, 2) Not Null
+totalAmount decimal(10, 2) Not Null,
+paymentStatus varchar(15) Not Null
+CONSTRAINT paymentst CHECK (paymentStatus IN ('Paid','Not Paid','Partially Paid'))
 );
 
 Create Table Products (
@@ -77,6 +81,7 @@ Create Table Customer_Order_Details (
 orderId int Foreign Key References Customer_Order(orderID) Not Null,
 productID int Foreign Key References Products(productID) Not Null,
 quantity int Not Null,
+salePrice decimal(10, 2) Not Null,
 Primary Key (orderID, productID)
 );
 
