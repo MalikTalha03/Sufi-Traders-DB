@@ -11,19 +11,18 @@ import pyodbc
 from datetime import datetime
 
 class Ui_MainWindow(object):
-    def __init__(self, data,suppid,total):
-        self.total = total
-        self.data = data
-        self.suppid=suppid
-        self.populate_table()
+    def __init__(self):
+        self.total = 0
+        self.data = {}
+        self.suppid=0
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
         self.id = 0
-        self.orderno()
+        
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -113,9 +112,9 @@ class Ui_MainWindow(object):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.MessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             if cnxn:
                 cnxn.close()
@@ -140,7 +139,7 @@ class Ui_MainWindow(object):
             # Assign the connection to cnxn
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
-                cursor.execute("Insert into Supplier_Order Values (?,?,?,?)", self.id,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total)
+                cursor.execute("Insert into Supplier_Order Values (?,?,?,?,?)", self.id,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total,'Not Paid')
                 for data in self.data:
                     # Check if the product already exists
                     cursor.execute(
@@ -157,8 +156,8 @@ class Ui_MainWindow(object):
                             "WHERE productID = ?",
                             new_quantity, new_price, data['pid']
                         )
-                        cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)",
-                                       self.id,data['pid'],data['purprice'],data['inv'])
+                        cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)",self.id,data['pid'],data['purprice'],data['inv'])
+
                     else:
                         # Product doesn't exist, insert a new record
                         cursor.execute(
@@ -166,25 +165,40 @@ class Ui_MainWindow(object):
                             data['pid'], data['pname'], data['sale_price'],
                             data['cid'], self.suppid, data['inv']
                         )
-                        cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)",
-                                       self.id,data['pid'],data['purprice'],data['inv'])
+                        cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)", self.id,data['pid'],data['purprice'],data['inv'])
                 cursor.commit()
             # Clear the list after successfully adding to the database
             self.total = 0
             self.data = []
             self.suppid=0
             self.orderno=0
+            self.tableWidget.clearContents()
+            self.tableWidget.setRowCount(0)
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Success")
+            msg_box.setText("Order Added Successfully")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+
         except pyodbc.Error as ex:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.MessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
+
+    def setValues(self,data,suppid,total):
+        self.data = data
+        self.suppid=suppid
+        self.total=total
+        self.populate_table()
+        self.orderno()
 
 
 

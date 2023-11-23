@@ -13,7 +13,7 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
@@ -94,15 +94,9 @@ class Ui_MainWindow(object):
         suppName = self.lineEdit_2.text()
         suppContact = self.lineEdit_3.text()
         suppAddress = self.lineEdit_4.text()
-        cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+
         try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(cnxn_str)
+            cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
                 cursor.execute("Select * from Supplier where supplierName = ?", suppName)
                 if cursor.fetchone():
@@ -142,7 +136,7 @@ class Ui_MainWindow(object):
             with cnxn.cursor() as cursor:
                 cursor.execute("Select MAX(supplierID) From Supplier")
                 row = cursor.fetchone()
-                if row:
+                if row[0]:
                     self.id = row[0] + 1
                 else:
                     self.id = 1

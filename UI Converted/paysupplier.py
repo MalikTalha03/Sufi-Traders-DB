@@ -8,9 +8,17 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from paymentsup import Ui_Form
 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.cnxn_str = (
+            "Driver={SQL Server};"
+            "Server=MALIK-TALHA;"
+            "Database=Sufi_Traders;"
+            "Trusted_Connection=yes;"
+        )
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -90,7 +98,8 @@ class Ui_MainWindow(object):
         self.actionadd.setObjectName("actionadd")
         self.menuoption.addAction(self.actionadd)
         self.menubar.addAction(self.menuoption.menuAction())
-        self.pushButton.clicked.connect(self.findorder)
+        self.pushButton.clicked.connect(self.payorder)
+        self.lineEdit.returnPressed.connect(self.findorder)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -119,7 +128,6 @@ class Ui_MainWindow(object):
         self.actionadd.setText(_translate("MainWindow", "add"))
         
     def findorder(self):
-        self.clearfields()
         cnxn = None
         id = self.lineEdit.text()
         total = 0
@@ -128,41 +136,44 @@ class Ui_MainWindow(object):
             # Assign the connection to cnxn
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
-                cursor.execute("Select * from Customer_Order Where orderID=?",id)
+                cursor.execute("Select * from Supplier_Order Where orderID=?",id)
                 order = cursor.fetchone()
                 if order:
-                    cid = order[1]
-                    self.lineEdit_8.setText(str(cid))
-                    cursor.execute("Select * from Customers Where customerID=?",cid)
+                    sid = order[2]
+                    cursor.execute("Select * from Supplier Where supplierID=?",sid)
                     cust = cursor.fetchone()
                     if cust:
-                        cname = str(cust[1] + " " + cust[2])
+                        cname = str(cust[1])
                         self.lineEdit_2.setText(cname)
-                    cursor.execute("Select * from Customer_Order_Details Where orderId=?",id)
+                    cursor.execute("Select * from Supplier_Order_Details Where orderId=?",id)
                     rows = cursor.fetchall()
                     for row in rows:
                         prodtot = 0
                         pid=row[1]
-                        quantity= row[2]
-                        cursor.execute("Select * from Products Where productID = ?",pid)
+                        cursor.execute("Select * from Products Where productID=?",pid)
                         prod = cursor.fetchone()
-                        prodprice=prod[2]
-                        prodtot = int(quantity) * int(prodprice)
+                        prodname = prod[1]
+                        price = row[2]
+                        quantity= row[3]
+                        prodtot = price * quantity
                         total = total + prodtot
 
                         row_position = self.tableWidget.rowCount()
                         self.tableWidget.insertRow(row_position)
                         self.tableWidget.setItem(row_position, 0, QtWidgets.QTableWidgetItem(str(pid)))
-                        self.tableWidget.setItem(row_position, 1, QtWidgets.QTableWidgetItem(str(prod[1])))
-                        self.tableWidget.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(prodprice)))
+                        self.tableWidget.setItem(row_position, 1, QtWidgets.QTableWidgetItem(str(prodname)))
+                        self.tableWidget.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(price)))
                         self.tableWidget.setItem(row_position, 3, QtWidgets.QTableWidgetItem(str(quantity)))
                         self.tableWidget.setItem(row_position, 4, QtWidgets.QTableWidgetItem(str(prodtot)))
                     self.lineEdit_4.setText(str(total))
-                    cursor.execute("SELECT * FROM Customer_Transactions WHERE orderID = ? AND transactionType IN (?, ?)", (id, 'Cash', 'Bank Transfer'))
+                    cursor.execute("SELECT * FROM Supplier_Transactions WHERE orderID = ? AND transactionType IN (?, ?)", (id, 'Cash', 'Bank Transfer'))
                     rows = cursor.fetchall()
-                    for row in rows:
-                        totalpaid = totalpaid + row[2]
+                    if rows:
+                        for row in rows:
+                            totalpaid = totalpaid + row[2]
                         self.lineEdit_3.setText(str(totalpaid))
+                    else:
+                        self.lineEdit_3.setText(str(0))
                     rem = total -totalpaid
                     if rem == 0 :
                         self.lineEdit_9.setText(str(rem))
@@ -188,6 +199,15 @@ class Ui_MainWindow(object):
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
+    def payorder(self):
+        self.win = QtWidgets.QWidget()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.ui.setValues(self.lineEdit.text(), self.lineEdit_4.text(), self.lineEdit_9.text())
+        self.win.show()
+        
+        
+        
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         self.cid = 0
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )

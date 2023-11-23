@@ -13,7 +13,7 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )

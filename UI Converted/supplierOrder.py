@@ -9,6 +9,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from datetime import datetime
 import pyodbc
+from supporderdetail import Ui_MainWindow as supporderdetail
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -18,7 +19,7 @@ class Ui_MainWindow(object):
         self.category_data = {}
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
@@ -134,6 +135,17 @@ class Ui_MainWindow(object):
         self.menuOptions.addAction(self.actionOrder)
         self.menubar.addAction(self.menuOptions.menuAction())
 
+        self.lineEdit.returnPressed.connect(self.findsupplier)
+        self.lineEdit_3.returnPressed.connect(self.findproduct)
+        self.lineEdit_7.returnPressed.connect(self.addproduct)
+        self.lineEdit_5.returnPressed.connect(lambda: self.lineEdit_6.setFocus())
+        self.lineEdit_6.returnPressed.connect(lambda: self.lineEdit_7.setFocus())
+        self.lineEdit_4.returnPressed.connect(lambda: self.lineEdit_5.setFocus())
+        self.pushButton.clicked.connect(self.open_supplier_order_detail)
+        self.fetch_and_populate_categories()
+        self.comboBox.activated.connect(self.handle_category_selection)
+        self.orderno()
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -163,44 +175,40 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Proceed"))
         self.label_9.setText(_translate("MainWindow", "Category"))
         self.label_10.setText(_translate("MainWindow", "OrderID"))
-        self.comboBox.setItemText(0, _translate("MainWindow", "First"))
         self.menuOptions.setTitle(_translate("MainWindow", "Options"))
         self.actionAdd.setText(_translate("MainWindow", "Add"))
         self.actionOrder.setText(_translate("MainWindow", "Order"))
-        self.lineEdit.returnPressed.connect(self.findsupplier)
-        self.lineEdit_3.returnPressed.connect(self.findproduct)
-        self.lineEdit_7.returnPressed.connect(self.addproduct)
-        self.lineEdit_5.returnPressed.connect(self.movefocus)
-        self.lineEdit_6.returnPressed.connect(self.nextfocus)
-        self.lineEdit_4.returnPressed.connect(self.movenext)
-        self.pushButton.clicked.connect(self.open_details_window)
-        self.fetch_and_populate_categories()
-        self.comboBox.activated.connect(self.handle_category_selection)
+        
 
-    def open_details_window(self):
-        from supporderdetail import Ui_MainWindow
-        data_to_pass = self.row_details  # Assuming row_details is the data you want to pass
-        self.details_window = Ui_MainWindow(data_to_pass,self.suppid,self.total)
-        self.details_window.show()
+    def orderno(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            with cnxn.cursor() as cursor:
+                cursor.execute("Select MAX(orderID) From Supplier_Order")
+                max_order_id = cursor.fetchone()[0]
 
-    def nextfocus(self):
-        if self.lineEdit_6.text():
-            self.lineEdit_7.setFocus()
-
-    def movenext(self):
-        if self.lineEdit_4.text():
-            self.lineEdit_5.setFocus()
-
-    def movefocus(self):
-        self.lineEdit_6.setFocus()
-
+                if max_order_id is not None:
+                    self.id = int(max_order_id) + 1
+                else:
+                    self.id = 1
+                self.lineEdit_10.setText(str(self.id))
+                self.lineEdit_10.setEnabled(False)
+                
+        except pyodbc.Error as ex:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: {}".format(ex))
+            msg_box.setIcon(QtWidgets.MessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
     def findsupplier(self):
         cnxn = None
-        
         id = self.lineEdit.text()
-        
         try:
-            # Assign the connection to cnxn
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
                 cursor.execute("SELECT * FROM Supplier WHERE supplierID = ?", id)
@@ -209,27 +217,27 @@ class Ui_MainWindow(object):
                     self.lineEdit_2.setText(row[1])
                     self.lineEdit_3.setFocus()
                 else:
-                    # Inform the user that no entry was found
-                    print("No Entry Found")
+                    msg_box = QtWidgets.QMessageBox()
+                    msg_box.setWindowTitle("Supplier Error")
+                    msg_box.setText("Supplier Not Found. Please add supplier before proceeding.")
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
         except pyodbc.Error as ex:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
             msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            result = msg_box.exec_()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
-            # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-                print("Connection closed.")
-            
 
     def findproduct(self):
         cnxn = None
         pid = self.lineEdit_3.text()
         try:
-            # Assign the connection to cnxn
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
                 cursor.execute("SELECT * FROM Products WHERE productID = ?", pid)
@@ -238,7 +246,6 @@ class Ui_MainWindow(object):
                     self.lineEdit_4.setText(str(row[1]))
                     self.lineEdit_4.setEnabled(False)
                     self.lineEdit_6.setText(str(row[2]))
-
                     category_id = row[3]
                     category_name = self.get_key_by_value(category_id)
                     index = self.comboBox.findText(category_name)
@@ -250,13 +257,16 @@ class Ui_MainWindow(object):
                 else:
                     self.lineEdit_4.setFocus()
         except pyodbc.Error as ex:
-            # Handle the exception and inform the user
-            print("Database Error ?", ex)
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: {}".format(ex))
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-                print("Connection closed.")
 
     def get_key_by_value(self,target_value):
         for key, value in self.category_data.items():
@@ -270,7 +280,6 @@ class Ui_MainWindow(object):
         if (
             self.lineEdit.text() and self.lineEdit_3.text() and self.lineEdit_4.text()
             and self.lineEdit_6.text() and self.lineEdit_7.text() and self.comboBox.currentIndex() >= 0):
-
             pid = self.lineEdit_3.text()
             pname = self.lineEdit_4.text()
             saleprice = float(self.lineEdit_6.text())
@@ -280,26 +289,18 @@ class Ui_MainWindow(object):
             selected_category_name = self.comboBox.currentText()
             cid = self.category_data.get(selected_category_name, "Unknown Category")
             total_price = purprice * inv
-
-            # Check if the product is already in the list
             existing_product_index = -1
             for i, row_detail in enumerate(self.row_details):
                 if row_detail['pid'] == pid:
                     existing_product_index = i
                     break
-
             if existing_product_index != -1:
-                # Product already exists, update inventory and table entry
                 existing_inv = self.row_details[existing_product_index]['inv']
                 self.row_details[existing_product_index]['inv'] += inv
                 self.row_details[existing_product_index]['total_price'] += total_price
-
-                # Update the table widget
                 self.tableWidget.setItem(existing_product_index, 4, QtWidgets.QTableWidgetItem(str(existing_inv + inv)))
                 self.tableWidget.setItem(existing_product_index, 5, QtWidgets.QTableWidgetItem(str(self.row_details[existing_product_index]['total_price'])))
-
             else:
-                # Product does not exist, add a new row to the table widget
                 row_position = self.tableWidget.rowCount()
                 self.tableWidget.insertRow(row_position)
                 self.tableWidget.setItem(row_position, 0, QtWidgets.QTableWidgetItem(pid))
@@ -308,12 +309,8 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem(row_position, 3, QtWidgets.QTableWidgetItem(str(purprice)))
                 self.tableWidget.setItem(row_position, 4, QtWidgets.QTableWidgetItem(str(inv)))
                 self.tableWidget.setItem(row_position, 5, QtWidgets.QTableWidgetItem(str(total_price)))
-
-                # Update the total
                 self.total += total_price
                 self.lineEdit_8.setText(str(self.total))
-
-                # Add the new product to the list
                 row_detail = {
                     'pid': pid,
                     'pname': pname,
@@ -326,7 +323,6 @@ class Ui_MainWindow(object):
                 }
                 self.row_details.append(row_detail)
 
-            # Clear the line edits
             self.lineEdit_3.clear()
             self.lineEdit_4.clear()
             self.lineEdit_5.clear()
@@ -342,35 +338,35 @@ class Ui_MainWindow(object):
     def fetch_and_populate_categories(self):
         cnxn = None
         try:
-            # Connect to the database
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
-                # Execute a query to fetch category IDs and names
                 cursor.execute("SELECT * FROM Categories")
                 rows = cursor.fetchall()
                 self.category_data = {row[1]: row[0] for row in rows}
-                # Populate the ComboBox with category names
                 for row in rows:
                     category_name = row[1]
                     self.comboBox.addItem(category_name)
-
         except pyodbc.Error as ex:
-            print("Database Error:", ex)
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: {}".format(ex))
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
         finally:
             if cnxn:
                 cnxn.close()
 
     def handle_category_selection(self, index):
-        # Get the selected category name
         selected_category_name = self.comboBox.currentText()
-
-        # Get the category ID using the selected category name
         selected_category_id = self.category_data.get(selected_category_name, None)
 
-        if selected_category_id is not None:
-            print("Selected Category ID:", selected_category_id)
-        else:
-            print("Category ID not found for:", selected_category_name)
+    def open_supplier_order_detail(self):
+        self.win = QtWidgets.QMainWindow()
+        self.ui = supporderdetail()
+        self.ui.setupUi(self.win)
+        self.ui.setValues(self.row_details, self.suppid, self.total)
+        self.win.show()
     
 
 

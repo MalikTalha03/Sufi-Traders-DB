@@ -15,7 +15,7 @@ class Ui_Form(object):
         
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
@@ -55,7 +55,7 @@ class Ui_Form(object):
         Form.setWindowTitle(_translate("Form", "Form"))
         self.label.setText(_translate("Form", "Category ID"))
         self.pushButton.setText(_translate("Form", "ADD"))
-        self.label_2.setText(_translate("Form", "Category ID"))
+        self.label_2.setText(_translate("Form", "Category Name"))
     
     def idfind(self):
         try:
@@ -64,7 +64,7 @@ class Ui_Form(object):
             with cnxn.cursor() as cursor:
                 cursor.execute("Select MAX(categoryID) From Categories")
                 row = cursor.fetchone()
-                if row:
+                if row and row[0] is not None:
                     self.id = row[0] + 1
                 else:
                     self.id = 1
@@ -74,6 +74,7 @@ class Ui_Form(object):
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
+
     def addcategory(self):
         cnxn = None
         cid = self.lineEdit.text()

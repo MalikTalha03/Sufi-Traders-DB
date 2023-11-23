@@ -17,9 +17,11 @@ class Ui_MainWindow(object):
         self.data = {}
         self.cid=0
         self.orderno=0
+        self.custindata = True
+        self.custinfo = {}
         self.cnxn_str = (
             "Driver={SQL Server};"
-            "Server=DESKTOP-JS0EJFG\SQLEXPRESS;"
+            "Server=MALIK-TALHA;"
             "Database=Sufi_Traders;"
             "Trusted_Connection=yes;"
         )
@@ -86,7 +88,6 @@ class Ui_MainWindow(object):
         self.menuoptions.addAction(self.actionadd)
         self.menubar.addAction(self.menuoptions.menuAction())
         self.pushButton.clicked.connect(self.addtodb)
-        self.populate_table()
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -112,6 +113,7 @@ class Ui_MainWindow(object):
         self.actionadd.setText(_translate("MainWindow", "add"))
 
     def populate_table(self):
+        print(self.data)
         self.lineEdit_6.setText('{}'.format(self.orderno))
         self.lineEdit_7.setText('{}'.format(self.total))
     # Assuming that self.data is a list of dictionaries
@@ -135,7 +137,15 @@ class Ui_MainWindow(object):
             # Assign the connection to cnxn
             cnxn = pyodbc.connect(self.cnxn_str)
             with cnxn.cursor() as cursor:
-                cursor.execute("INSERT INTO Customer_Order (orderID, customerID, employeeID, orderDate, orderTime) VALUES (?, ?, ?, ?, ?)",self.orderno, self.cid, 1, order_date, order_time)                
+                if self.custindata == False:
+                    cursor.execute("Select MAX(customerID) from Customers")
+                    row = cursor.fetchone()
+                    if row and row[0]:
+                        self.cid = row[0] + 1
+                    else:
+                        self.cid = 1
+                    cursor.execute("INSERT INTO Customers VALUES (?, ?, ?, ?)",self.cid,self.custinfo['fname'], self.custinfo['lname'], self.custinfo['phone'])
+                cursor.execute("INSERT INTO Customer_Order VALUES (?, ?, ?, ?, ?)",self.orderno, self.cid, 1, order_date, order_time)                
                 for data in self.data:
                     # Check if the product already exists
                     cursor.execute(
@@ -150,8 +160,7 @@ class Ui_MainWindow(object):
                             "UPDATE Products SET inventory = ? WHERE productID = ?",
                             new_quantity, data['pid']
                         )
-                        cursor.execute("Insert into Customer_Order_Details Values (?,?,?)",
-                                       self.orderno,data['pid'],data['quantity'])
+                        cursor.execute("Insert into Customer_Order_Details Values (?,?,?,?)",self.orderno,data['pid'],data['quantity'],data['price'])
                 cursor.commit()
             # Clear the list after successfully adding to the database
             self.openwin()
@@ -164,10 +173,10 @@ class Ui_MainWindow(object):
             # Handle the exception and inform the user
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: ?",ex)
+            msg_box.setText("Error: {}".format(ex))
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec_()
+            result = msg_box.exec()
         finally:
             # Close the connection in the finally block
             if cnxn:
@@ -181,11 +190,14 @@ class Ui_MainWindow(object):
         self.ui.setValues(self.orderno,self.total,self.cid)
         self.win.show()
 
-    def setValues(self, data,order,custid,total):
+    def setValues(self,data,order,custid,total,custinfo,custindata):
         self.total = total
         self.data = data
         self.cid=custid
         self.orderno=order
+        self.custinfo = custinfo
+        self.custindata = custindata
+        self.populate_table()
 
 
 if __name__ == "__main__":
