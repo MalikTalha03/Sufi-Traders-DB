@@ -15,7 +15,7 @@
   </property>
   <widget class="QLineEdit" name="lineEdit_6">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
@@ -75,7 +75,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>140</y>
+     <y>170</y>
      <width>101</width>
      <height>16</height>
     </rect>
@@ -88,8 +88,8 @@
    <property name="geometry">
     <rect>
      <x>140</x>
-     <y>140</y>
-     <width>72</width>
+     <y>170</y>
+     <width>101</width>
      <height>24</height>
     </rect>
    </property>
@@ -132,7 +132,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Amount</string>
+    <string>Remaining</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton">
@@ -146,6 +146,32 @@
    </property>
    <property name="text">
     <string>Complete Payment</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEdit_9">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>130</y>
+     <width>71</width>
+     <height>24</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_10">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>130</y>
+     <width>71</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Amount</string>
    </property>
   </widget>
  </widget>

@@ -12,6 +12,16 @@
         "paymentcust.ui",
         "paysupplier.ui",
         "findcustorder.ui",
-        "addemployee.ui"
+        "addemployee.ui",
+        "findcust.ui",
+        "updatecustomer.ui",
+        "allcustorders.ui",
+        "allsupporder.ui",
+        "findsupplier.ui",
+        "updsupplier.ui",
+        "checkinventory.ui",
+        "updateemployee.ui",
+        "empdetail.ui",
+        "Dashboard.ui"
     ]
 }

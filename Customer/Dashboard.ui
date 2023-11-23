@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>20</y>
+      <width>131</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>16</pointsize>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Today Sales</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>80</y>
+      <width>691</width>
+      <height>331</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>20</y>
+      <width>141</width>
+      <height>41</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuCustomer">
+    <property name="title">
+     <string>Customer</string>
+    </property>
+    <addaction name="actionNew_Order"/>
+    <addaction name="actionGet_Paid"/>
+    <addaction name="actionFind_Order"/>
+    <addaction name="actionUpdate_Customer"/>
+    <addaction name="actionGet_All_Orders"/>
+   </widget>
+   <widget class="QMenu" name="menuSupplier">
+    <property name="title">
+     <string>Supplier</string>
+    </property>
+    <addaction name="actionNew_Order_2"/>
+    <addaction name="actionPay_Supplier"/>
+    <addaction name="actionFind_Supplier"/>
+    <addaction name="actionUpdate_details"/>
+    <addaction name="actionAll_Orderd"/>
+    <addaction name="actionFind_Order_2"/>
+   </widget>
+   <widget class="QMenu" name="menuProduct">
+    <property name="title">
+     <string>Product</string>
+    </property>
+    <addaction name="actionInventory"/>
+    <addaction name="actionAdd_Category"/>
+   </widget>
+   <widget class="QMenu" name="menuEmployee">
+    <property name="title">
+     <string>Employee</string>
+    </property>
+    <addaction name="actionAdd"/>
+    <addaction name="actionCheck_Details"/>
+    <addaction name="actionUpdate_Details"/>
+    <addaction name="actionDelete"/>
+   </widget>
+   <addaction name="menuCustomer"/>
+   <addaction name="menuSupplier"/>
+   <addaction name="menuProduct"/>
+   <addaction name="menuEmployee"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNew_Order">
+   <property name="text">
+    <string>New Order</string>
+   </property>
+  </action>
+  <action name="actionGet_Paid">
+   <property name="text">
+    <string>Get Paid</string>
+   </property>
+  </action>
+  <action name="actionFind_Order">
+   <property name="text">
+    <string>Find Order</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Customer">
+   <property name="text">
+    <string>Update Customer</string>
+   </property>
+  </action>
+  <action name="actionGet_All_Orders">
+   <property name="text">
+    <string>Get All Orders</string>
+   </property>
+  </action>
+  <action name="actionNew_Order_2">
+   <property name="text">
+    <string>New Order</string>
+   </property>
+  </action>
+  <action name="actionPay_Supplier">
+   <property name="text">
+    <string>Pay Supplier</string>
+   </property>
+  </action>
+  <action name="actionFind_Supplier">
+   <property name="text">
+    <string>Find Supplier</string>
+   </property>
+  </action>
+  <action name="actionUpdate_details">
+   <property name="text">
+    <string>Update details</string>
+   </property>
+  </action>
+  <action name="actionAll_Orderd">
+   <property name="text">
+    <string>All Orders</string>
+   </property>
+  </action>
+  <action name="actionFind_Order_2">
+   <property name="text">
+    <string>Find Order</string>
+   </property>
+  </action>
+  <action name="actionInventory">
+   <property name="text">
+    <string>Inventory</string>
+   </property>
+  </action>
+  <action name="actionAdd_Category">
+   <property name="text">
+    <string>Add Category</string>
+   </property>
+  </action>
+  <action name="actionAdd">
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </action>
+  <action name="actionCheck_Details">
+   <property name="text">
+    <string>Check Details</string>
+   </property>
+  </action>
+  <action name="actionUpdate_Details">
+   <property name="text">
+    <string>Update Details</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
