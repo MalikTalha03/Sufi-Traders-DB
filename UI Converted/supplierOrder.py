@@ -10,6 +10,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from datetime import datetime
 import pyodbc
 from supporderdetail import Ui_MainWindow as supporderdetail
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -118,22 +119,13 @@ class Ui_MainWindow(object):
         self.comboBox.setObjectName("comboBox")
         self.comboBox.addItem("")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuOptions = QtWidgets.QMenu(parent=self.menubar)
-        self.menuOptions.setObjectName("menuOptions")
-        MainWindow.setMenuBar(self.menubar)
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionAdd = QtGui.QAction(parent=MainWindow)
-        self.actionAdd.setObjectName("actionAdd")
-        self.actionOrder = QtGui.QAction(parent=MainWindow)
-        self.actionOrder.setObjectName("actionOrder")
-        self.menuOptions.addAction(self.actionAdd)
-        self.menuOptions.addAction(self.actionOrder)
-        self.menubar.addAction(self.menuOptions.menuAction())
+       
+        
 
         self.lineEdit.returnPressed.connect(self.findsupplier)
         self.lineEdit_3.returnPressed.connect(self.findproduct)
@@ -175,9 +167,7 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Proceed"))
         self.label_9.setText(_translate("MainWindow", "Category"))
         self.label_10.setText(_translate("MainWindow", "OrderID"))
-        self.menuOptions.setTitle(_translate("MainWindow", "Options"))
-        self.actionAdd.setText(_translate("MainWindow", "Add"))
-        self.actionOrder.setText(_translate("MainWindow", "Order"))
+      
         
 
     def orderno(self):

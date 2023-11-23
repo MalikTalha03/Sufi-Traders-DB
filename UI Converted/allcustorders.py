@@ -8,6 +8,7 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -77,16 +78,13 @@ class Ui_MainWindow(object):
         self.lineEdit_9.setText("")
         self.lineEdit_9.setObjectName("lineEdit_9")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
-        self.menubar.setObjectName("menubar")
-        self.menuoptions = QtWidgets.QMenu(parent=self.menubar)
-        self.menuoptions.setObjectName("menuoptions")
-        MainWindow.setMenuBar(self.menubar)
+        
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
+        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.menubar.addAction(self.menuoptions.menuAction())
         self.lineEdit.setFocus()
         self.lineEdit.returnPressed.connect(self.findordersbyid)
         self.lineEdit_2.returnPressed.connect(self.findordersbyname)
@@ -112,7 +110,6 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "Contact No"))
         self.label_4.setText(_translate("MainWindow", "Customer Name"))
         self.label_10.setText(_translate("MainWindow", "Remaining Credit"))
-        self.menuoptions.setTitle(_translate("MainWindow", "options"))
 
     def findordersbyid(self):
         id = self.lineEdit.text()

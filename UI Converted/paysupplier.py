@@ -9,7 +9,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from paymentsup import Ui_Form
-
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -85,19 +85,13 @@ class Ui_MainWindow(object):
         self.pushButton.setGeometry(QtCore.QRect(660, 530, 80, 24))
         self.pushButton.setObjectName("pushButton")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuoption = QtWidgets.QMenu(parent=self.menubar)
-        self.menuoption.setObjectName("menuoption")
-        MainWindow.setMenuBar(self.menubar)
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionadd = QtGui.QAction(parent=MainWindow)
-        self.actionadd.setObjectName("actionadd")
-        self.menuoption.addAction(self.actionadd)
-        self.menubar.addAction(self.menuoption.menuAction())
+        
+        
         self.pushButton.clicked.connect(self.payorder)
         self.lineEdit.returnPressed.connect(self.findorder)
 
@@ -124,8 +118,7 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Total"))
         self.label_4.setText(_translate("MainWindow", "Supplier Name"))
         self.pushButton.setText(_translate("MainWindow", "Pay"))
-        self.menuoption.setTitle(_translate("MainWindow", "option"))
-        self.actionadd.setText(_translate("MainWindow", "add"))
+       
         
     def findorder(self):
         cnxn = None

@@ -8,6 +8,7 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -90,19 +91,12 @@ class Ui_MainWindow(object):
         self.pushButton.setGeometry(QtCore.QRect(639, 530, 111, 24))
         self.pushButton.setObjectName("pushButton")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuadd = QtWidgets.QMenu(parent=self.menubar)
-        self.menuadd.setObjectName("menuadd")
-        MainWindow.setMenuBar(self.menubar)
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionadd = QtGui.QAction(parent=MainWindow)
-        self.actionadd.setObjectName("actionadd")
-        self.menuadd.addAction(self.actionadd)
-        self.menubar.addAction(self.menuadd.menuAction())
+        
         self.lineEdit.returnPressed.connect(self.findorder)
 
         self.retranslateUi(MainWindow)
@@ -129,8 +123,6 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Total"))
         self.label_10.setText(_translate("MainWindow", "Remaining Amount"))
         self.pushButton.setText(_translate("MainWindow", "Receive Payment"))
-        self.menuadd.setTitle(_translate("MainWindow", "add"))
-        self.actionadd.setText(_translate("MainWindow", "add"))
 
     def findorder(self):
         self.clearfields()

@@ -1,5 +1,6 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from topbar import MenuBar
 class Ui_MainWindow(object):
     def __init__(self):
         self.row_details = []
@@ -102,23 +103,13 @@ class Ui_MainWindow(object):
         self.lineEdit_8.setGeometry(QtCore.QRect(400, 40, 113, 24))
         self.lineEdit_8.setObjectName("lineEdit_8")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuOptions = QtWidgets.QMenu(parent=self.menubar)
-        self.menuOptions.setObjectName("menuOptions")
-        MainWindow.setMenuBar(self.menubar)
+        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionAdd_Order = QtGui.QAction(parent=MainWindow)
-        self.actionAdd_Order.setObjectName("actionAdd_Order")
-        self.actionFiond_Order = QtGui.QAction(parent=MainWindow)
-        self.actionFiond_Order.setObjectName("actionFiond_Order")
-        self.menuOptions.addAction(self.actionAdd_Order)
-        self.menuOptions.addAction(self.actionFiond_Order)
-        self.menubar.addAction(self.menuOptions.menuAction())
-
+        
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
         self.lineEdit_4.returnPressed.connect(self.move)
         self.lineEdit_5.returnPressed.connect(self.addNewRow)
         self.lineEdit_3.returnPressed.connect(self.handle_lineEdit3_enter) 
@@ -156,9 +147,7 @@ class Ui_MainWindow(object):
         self.label_4.setText(_translate("MainWindow", "Last name"))
         self.pushButton.setText(_translate("MainWindow", "Proceed"))
         self.label_9.setText(_translate("MainWindow", "Customer ID"))
-        self.menuOptions.setTitle(_translate("MainWindow", "Options"))
-        self.actionAdd_Order.setText(_translate("MainWindow", "Add Order"))
-        self.actionFiond_Order.setText(_translate("MainWindow", "Find Order"))
+       
 
     def orderid(self):
         cnxn = None

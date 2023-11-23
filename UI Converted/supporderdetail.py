@@ -9,6 +9,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from datetime import datetime
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -55,19 +56,13 @@ class Ui_MainWindow(object):
         self.lineEdit.setGeometry(QtCore.QRect(110, 10, 113, 24))
         self.lineEdit.setObjectName("lineEdit")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuOption = QtWidgets.QMenu(parent=self.menubar)
-        self.menuOption.setObjectName("menuOption")
-        MainWindow.setMenuBar(self.menubar)
+        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionAdd = QtGui.QAction(parent=MainWindow)
-        self.actionAdd.setObjectName("actionAdd")
-        self.menuOption.addAction(self.actionAdd)
-        self.menubar.addAction(self.menuOption.menuAction())
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
+        
         self.pushButton.clicked.connect(self.addtodb)
 
         self.retranslateUi(MainWindow)
@@ -90,8 +85,7 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Total"))
         self.pushButton.setText(_translate("MainWindow", "Add"))
         self.label.setText(_translate("MainWindow", "Order No"))
-        self.menuOption.setTitle(_translate("MainWindow", "Option"))
-        self.actionAdd.setText(_translate("MainWindow", "Add"))
+        
 
     def orderno(self):
         cnxn = None

@@ -10,6 +10,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -74,19 +75,13 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(4, item)
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
-        self.menubar.setObjectName("menubar")
-        self.menuoptions = QtWidgets.QMenu(parent=self.menubar)
-        self.menuoptions.setObjectName("menuoptions")
-        MainWindow.setMenuBar(self.menubar)
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionadd = QtGui.QAction(parent=MainWindow)
-        self.actionadd.setObjectName("actionadd")
-        self.menuoptions.addAction(self.actionadd)
-        self.menubar.addAction(self.menuoptions.menuAction())
+        
+        
         self.pushButton.clicked.connect(self.addtodb)
 
         self.retranslateUi(MainWindow)
@@ -109,8 +104,7 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Quantity"))
         item = self.tableWidget.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Total"))
-        self.menuoptions.setTitle(_translate("MainWindow", "options"))
-        self.actionadd.setText(_translate("MainWindow", "add"))
+        
 
     def populate_table(self):
         print(self.data)

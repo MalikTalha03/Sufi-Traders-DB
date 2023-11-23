@@ -8,6 +8,7 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from topbar import MenuBar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -83,15 +84,14 @@ class Ui_MainWindow(object):
         self.lineEdit_10.setText("")
         self.lineEdit_10.setObjectName("lineEdit_10")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
+        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.lineEdit.returnPressed.connect(self.findordersbyid)
         self.lineEdit_2.returnPressed.connect(self.findorderbyname)
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
