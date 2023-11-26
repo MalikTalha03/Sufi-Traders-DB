@@ -7,9 +7,16 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-
+import pyodbc
 
 class Ui_Form(object):
+    def __init__(self):
+        self.cnxn_str = (
+            "Driver={SQL Server};"
+            "Server=MALIK-TALHA;"
+            "Database=Sufi_Traders;"
+            "Trusted_Connection=yes;"
+        )
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(371, 342)
@@ -53,6 +60,8 @@ class Ui_Form(object):
         self.label_7 = QtWidgets.QLabel(parent=Form)
         self.label_7.setGeometry(QtCore.QRect(60, 30, 71, 20))
         self.label_7.setObjectName("label_7")
+        self.lineEdit_6.setFocus()
+        self.lineEdit_6.returnPressed.connect(self.findemp)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -67,6 +76,80 @@ class Ui_Form(object):
         self.label_5.setText(_translate("Form", "Salary"))
         self.pushButton.setText(_translate("Form", "Update"))
         self.label_7.setText(_translate("Form", "Employee ID"))
+    def findemp(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            cursor = cnxn.cursor()
+            cursor.execute(
+                "SELECT * FROM Employee WHERE employeeID = ?", self.lineEdit_6.text()
+            )
+            row = cursor.fetchone()
+            if row:
+                self.lineEdit.setText(row[1])
+                self.lineEdit_3.setText(row[2])
+                self.lineEdit_2.setText(row[3])
+                self.lineEdit_4.setText(row[4])
+                self.lineEdit_5.setText(str(row[5]))
+                self.lineEdit_6.setEnabled(False)
+                self.lineEdit.setFocus()
+                self.pushButton.clicked.connect(self.updateemp)
+            else:
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                msg_box.setText("Employee not found!")
+                msg_box.setWindowTitle("Error")
+                msg_box.exec()
+        except pyodbc.Error as err:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg_box.setText('{}'.format(err))
+            msg_box.setWindowTitle("Error")
+            msg_box.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
+    def updateemp(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            cursor = cnxn.cursor()
+            cursor.execute(
+                "UPDATE Employee SET empFName = ?, empLName = ?, employeeAddress = ?, empContact = ?, salary = ? WHERE employeeID = ?",
+                self.lineEdit.text(),
+                self.lineEdit_3.text(),
+                self.lineEdit_2.text(),
+                self.lineEdit_4.text(),
+                self.lineEdit_5.text(),
+                self.lineEdit_6.text(),
+            )
+            cnxn.commit()
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg_box.setText("Employee updated successfully!")
+            msg_box.setWindowTitle("Success")
+            msg_box.exec()
+            self.lineEdit_6.setEnabled(True)
+            self.lineEdit_6.setFocus()
+            self.lineEdit.setText("")
+            self.lineEdit_3.setText("")
+            self.lineEdit_2.setText("")
+            self.lineEdit_4.setText("")
+            self.lineEdit_5.setText("")
+            self.pushButton.disconnect()
+        except pyodbc.Error as err:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg_box.setText('{}'.format(err))
+            msg_box.setWindowTitle("Error")
+            msg_box.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
 
 
 if __name__ == "__main__":

@@ -7,9 +7,16 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-
+import pyodbc
 
 class Ui_Form(object):
+    def __init__(self):
+        self.cnxn_str = (
+            "Driver={SQL Server};"
+            "Server=MALIK-TALHA;"
+            "Database=Sufi_Traders;"
+            "Trusted_Connection=yes;"
+        )
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 300)
@@ -43,6 +50,10 @@ class Ui_Form(object):
         self.pushButton = QtWidgets.QPushButton(parent=Form)
         self.pushButton.setGeometry(QtCore.QRect(240, 250, 91, 24))
         self.pushButton.setObjectName("pushButton")
+        self.lineEdit.returnPressed.connect(self.findbyid)
+        self.lineEdit.setFocus()
+        self.lineEdit_2.returnPressed.connect(self.findbyname)
+        self.lineEdit_4.returnPressed.connect(self.findbycontact)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -63,6 +74,136 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "Supplier Name"))
         self.label_4.setText(_translate("Form", "Contact"))
         self.pushButton.setText(_translate("Form", "Update"))
+    
+    def findbyid(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            cursor = cnxn.cursor()
+            cursor.execute(
+                "SELECT * FROM Supplier WHERE supplierID = ?",
+                self.lineEdit.text()
+            )
+            row = cursor.fetchone()
+            if row:
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_3.setText(row[2])
+                self.lineEdit_4.setText(str(row[3]))
+                self.pushButton.clicked.connect(self.update)
+            else:
+                msg = QtWidgets.QMessageBox()
+                msg.setText("No Supplier Found")
+                msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+                msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                msg.setWindowTitle("Warning")
+                msg.exec()
+
+        except Exception as e:
+            msg = QtWidgets.QMessageBox()
+            msg.setText(str(e))
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.setWindowTitle("Error")
+            msg.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
+
+    def update(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            cursor = cnxn.cursor()
+            cursor.execute(
+                "UPDATE Supplier SET supplierName = ?, supplierAddress = ?, supplierContact = ? WHERE supplierID = ?",
+                self.lineEdit_2.text(),
+                self.lineEdit_3.text(),
+                self.lineEdit_4.text(),
+                self.lineEdit.text()
+            )
+            cnxn.commit()
+            msg = QtWidgets.QMessageBox()
+            msg.setText("Supplier Updated Successfully")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.setWindowTitle("Success")
+            msg.exec()
+        except pyodbc.Error as e:
+            msg = QtWidgets.QMessageBox()
+            msg.setText('{}'.format(e))
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.setWindowTitle("Error")
+            msg.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
+    def findbyname(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            cursor = cnxn.cursor()
+            cursor.execute(
+                "SELECT * FROM Supplier WHERE supplierName = ?",
+                self.lineEdit_2.text()
+            )
+            row = cursor.fetchone()
+            if row:
+                self.lineEdit.setText(str(row[0]))
+                self.lineEdit_3.setText(row[2])
+                self.lineEdit_4.setText(str(row[3]))
+                self.pushButton.clicked.connect(self.update)
+            else:
+                msg = QtWidgets.QMessageBox()
+                msg.setText("No Supplier Found")
+                msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+                msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                msg.setWindowTitle("Warning")
+                msg.exec()
+
+        except pyodbc.Error as ex:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: {}".format(ex))
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
+    def findbycontact(self):
+        cnxn = None
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            cursor = cnxn.cursor()
+            cursor.execute(
+                "SELECT * FROM Supplier WHERE supplierContact = ?",
+                self.lineEdit_4.text()
+            )
+            row = cursor.fetchone()
+            if row:
+                self.lineEdit.setText(str(row[0]))
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_3.setText(row[2])
+                self.pushButton.clicked.connect(self.update)
+            else:
+                msg = QtWidgets.QMessageBox()
+                msg.setText("No Supplier Found")
+                msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+                msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                msg.setWindowTitle("Warning")
+                msg.exec()
+
+        except pyodbc.Error as e:
+            msg = QtWidgets.QMessageBox()
+            msg.setText("{}".format(str(e)))
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.setWindowTitle("Error")
+            msg.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
 
 
 if __name__ == "__main__":

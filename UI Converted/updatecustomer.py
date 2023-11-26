@@ -7,7 +7,7 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-
+import pyodbc
 
 class Ui_Form(object):
     def setupUi(self, Form):
