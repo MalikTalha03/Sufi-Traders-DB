@@ -45,7 +45,6 @@ class Ui_MainWindow(object):
         self.lineEdit_8.setGeometry(QtCore.QRect(200, 130, 71, 24))
         self.lineEdit_8.setObjectName("lineEdit_8")
         self.lineEdit_6 = QtWidgets.QLineEdit(parent=self.centralwidget)
-        self.lineEdit_6.setEnabled(False)
         self.lineEdit_6.setGeometry(QtCore.QRect(140, 80, 71, 24))
         self.lineEdit_6.setObjectName("lineEdit_6")
         self.comboBox = QtWidgets.QComboBox(parent=self.centralwidget)
@@ -97,6 +96,7 @@ class Ui_MainWindow(object):
         self.lineEdit_6.setText('{}'.format(self.orderno))
         self.lineEdit_7.setText('{}'.format(self.total))
         self.lineEdit_8.setText('{}'.format(self.total))
+        self.lineEdit_6.setEnabled(False)
         self.comboBox.setFocus()
 
     def payment(self):
@@ -234,7 +234,19 @@ class Ui_MainWindow(object):
                 else:
                     self.lineEdit_8.setText(str(rem))
                 cursor.execute("Select * from Customer_Order Where orderID=?",id)
-                self.cid = cursor.fetchone()[1]
+                cid = cursor.fetchone()
+                if cid:
+                    self.cid = cid[1]
+                else:
+                    msg_box = QtWidgets.QMessageBox()
+                    msg_box.setWindowTitle("Order Not Found")
+                    msg_box.setText("Order not found.")
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
+                    self.cleardata()
+                    self.lineEdit_6.setEnabled(True)
+                    self.lineEdit_6.setFocus()
             self.orderno = id
             self.total = total
         except pyodbc.Error as ex:
