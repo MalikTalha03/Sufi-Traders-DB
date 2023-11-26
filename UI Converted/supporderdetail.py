@@ -14,7 +14,7 @@ from topbar import MenuBar
 class Ui_MainWindow(object):
     def __init__(self):
         self.total = 0
-        self.data = {}
+        self.data = []
         self.suppid=0
         self.cnxn_str = (
             "Driver={SQL Server};"
@@ -55,6 +55,22 @@ class Ui_MainWindow(object):
         self.lineEdit = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(110, 10, 113, 24))
         self.lineEdit.setObjectName("lineEdit")
+        self.lineEdit_2 = QtWidgets.QLineEdit(parent=self.centralwidget)
+        self.lineEdit_2.setGeometry(QtCore.QRect(600, 10, 113, 24))
+        self.lineEdit_2.setObjectName("lineEdit_2")
+        self.lineEdit_2.setEnabled(False)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        font.setBold(True)
+        self.lineEdit_2.setFont(font)
+        self.label_2 = QtWidgets.QLabel(parent=self.centralwidget)
+        self.label_2.setGeometry(QtCore.QRect(520, 10, 51, 16))
+        self.label_2.setObjectName("label_2")
+        font1 = QtGui.QFont()
+        font1.setPointSize(11)
+        font1.setBold(True)
+        self.label_2.setFont(font1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
@@ -64,6 +80,8 @@ class Ui_MainWindow(object):
         MainWindow.setMenuBar(menubar)
         
         self.pushButton.clicked.connect(self.addtodb)
+        self.lineEdit.returnPressed.connect(self.findorder)
+        self.lineEdit.setFocus()
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -85,8 +103,58 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Total"))
         self.pushButton.setText(_translate("MainWindow", "Add"))
         self.label.setText(_translate("MainWindow", "Order No"))
+        self.label_2.setText(_translate("MainWindow", "Total"))
+                
         
-
+    def findorder(self):
+        cnxn = None
+        total = 0
+        try:
+            cnxn = pyodbc.connect(self.cnxn_str)
+            with cnxn.cursor() as cursor:
+                cursor.execute("Select * From Supplier_Order Where orderID=?",self.lineEdit.text())
+                order = cursor.fetchone()
+                if order is not None:
+                    self.lineEdit.setEnabled(False)
+                    self.id = order[0]
+                    self.suppid = order[2]
+                    self.total = order[4]
+                    cursor.execute("Select * From Supplier_Order_Details Where orderID=?",self.lineEdit.text())
+                    order_details = cursor.fetchall()
+                    for row in order_details:
+                        cursor.execute("Select * From Products Where productID=?",row[1])
+                        product = cursor.fetchone()
+                        cursor.execute("Select * From Categories Where categoryID=?",product[3])
+                        category = cursor.fetchone()[1]
+                        data = {
+                            'pid': product[0],
+                            'cname': category,
+                            'pname': product[1],
+                            'purprice': row[2],
+                            'inv': row[3],
+                            'total_price': row[2]*row[3]
+                        }
+                        total += data['total_price']
+                        self.data.append(data)
+                    self.lineEdit_2.setText(str(total))
+                    self.populate_table()
+                else:
+                    msg_box = QtWidgets.QMessageBox()
+                    msg_box.setWindowTitle("Error")
+                    msg_box.setText("Order Not Found")
+                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                    result = msg_box.exec()
+        except pyodbc.Error as ex:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Database Error")
+            msg_box.setText("Error: {}".format(ex))
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
     def orderno(self):
         cnxn = None
         try:
