@@ -27,73 +27,90 @@ class MenuBar(QtWidgets.QMenuBar):
         self.actionNew_Order = QtGui.QAction(self)
         self.actionNew_Order.setObjectName("actionNew_Order")
         self.actionNew_Order.setText("New Order")
+        self.actionNew_Order.triggered.connect(self.new_order)
 
         self.actionGet_Paid = QtGui.QAction(self)
         self.actionGet_Paid.setObjectName("actionGet_Paid")
         self.actionGet_Paid.setText("Get Paid")
+        self.actionGet_Paid.triggered.connect(self.custpaid)
 
         self.actionFind_Order = QtGui.QAction(self)
         self.actionFind_Order.setObjectName("actionFind_Order")
         self.actionFind_Order.setText("Find Order")
+        self.actionFind_Order.triggered.connect(self.custorder)
 
         self.actionUpdate_Customer = QtGui.QAction(self)
         self.actionUpdate_Customer.setObjectName("actionUpdate_Customer")
         self.actionUpdate_Customer.setText("Update Customer")
+        self.actionUpdate_Customer.triggered.connect(self.updcust)
 
         self.actionGet_All_Orders = QtGui.QAction(self)
         self.actionGet_All_Orders.setObjectName("actionGet_All_Orders")
         self.actionGet_All_Orders.setText("Get All Orders")
+        self.actionGet_All_Orders.triggered.connect(self.allcustorders)
 
         # Supplier menu actions
         self.actionNew_Order_2 = QtGui.QAction(self)
         self.actionNew_Order_2.setObjectName("actionNew_Order_2")
         self.actionNew_Order_2.setText("New Order")
+        self.actionNew_Order_2.triggered.connect(self.suppnew_order)
 
         self.actionPay_Supplier = QtGui.QAction(self)
         self.actionPay_Supplier.setObjectName("actionPay_Supplier")
         self.actionPay_Supplier.setText("Pay Supplier")
+        self.actionPay_Supplier.triggered.connect(self.paysupp)
 
         self.actionFind_Supplier = QtGui.QAction(self)
         self.actionFind_Supplier.setObjectName("actionFind_Supplier")
         self.actionFind_Supplier.setText("Find Supplier")
+        self.actionFind_Supplier.triggered.connect(self.findsupp)
 
         self.actionUpdate_details = QtGui.QAction(self)
         self.actionUpdate_details.setObjectName("actionUpdate_details")
         self.actionUpdate_details.setText("Update details")
+        self.actionUpdate_details.triggered.connect(self.updsupp)
 
         self.actionAll_Orderd = QtGui.QAction(self)
         self.actionAll_Orderd.setObjectName("actionAll_Orderd")
         self.actionAll_Orderd.setText("All Orders")
+        self.actionAll_Orderd.triggered.connect(self.allsupporders)
 
         self.actionFind_Order_2 = QtGui.QAction(self)
         self.actionFind_Order_2.setObjectName("actionFind_Order_2")
         self.actionFind_Order_2.setText("Find Order")
+        self.actionFind_Order_2.triggered.connect(self.findsupporder)
 
         # Product menu actions
         self.actionInventory = QtGui.QAction(self)
         self.actionInventory.setObjectName("actionInventory")
         self.actionInventory.setText("Inventory")
+        self.actionInventory.triggered.connect(self.inv)
 
         self.actionAdd_Category = QtGui.QAction(self)
         self.actionAdd_Category.setObjectName("actionAdd_Category")
         self.actionAdd_Category.setText("Add Category")
+        self.actionAdd_Category.triggered.connect(self.addcategory)
 
         # Employee menu actions
         self.actionAdd = QtGui.QAction(self)
         self.actionAdd.setObjectName("actionAdd")
         self.actionAdd.setText("Add")
+        self.actionAdd.triggered.connect(self.addemp)
 
         self.actionCheck_Details = QtGui.QAction(self)
         self.actionCheck_Details.setObjectName("actionCheck_Details")
         self.actionCheck_Details.setText("Check Details")
+        self.actionCheck_Details.triggered.connect(self.checkempdetails)
 
         self.actionUpdate_Details = QtGui.QAction(self)
         self.actionUpdate_Details.setObjectName("actionUpdate_Details")
         self.actionUpdate_Details.setText("Update Details")
+        self.actionUpdate_Details.triggered.connect(self.updemp)
 
         self.actionDelete = QtGui.QAction(self)
         self.actionDelete.setObjectName("actionDelete")
         self.actionDelete.setText("Delete")
+        self.actionDelete.triggered.connect(self.delemp)
 
         self.menuCustomer.addAction(self.actionNew_Order)
         self.menuCustomer.addAction(self.actionGet_Paid)
@@ -120,6 +137,105 @@ class MenuBar(QtWidgets.QMenuBar):
         self.addMenu(self.menuSupplier)
         self.addMenu(self.menuProduct)
         self.addMenu(self.menuEmployee)
+
+    def new_order(self):
+        from form import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def custpaid(self):
+        from paymentcust import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def custorder(self):
+        from findcustorder import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def updcust(self):
+        from updatecustomer import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def allcustorders(self):
+        from allcustorders import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def suppnew_order(self):
+        from supplierOrder import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def paysupp(self):
+        from paysupplier import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def findsupp(self):
+        from findsupplier import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def updsupp(self):
+        from updsupplier import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def allsupporders(self):
+        from allsupporder import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def findsupporder(self):
+        from supporderdetail import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def inv(self):
+        from checkinventory import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def addcategory(self):
+        from addcatedory import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def addemp(self):
+        from addemployee import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def checkempdetails(self):
+        from empdetail import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def updemp(self):
+        from updateemployee import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def delemp(self):
+        pass
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
