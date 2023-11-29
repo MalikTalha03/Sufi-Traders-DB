@@ -121,10 +121,12 @@ class Ui_MainWindow(object):
                 if row:
                     self.tableWidget.setRowCount(0)
                     cursor.execute('Select * from Customers where customerID=?',id)
-                    row = cursor.fetchone()
-                    if row:
-                        self.lineEdit_2.setText('{}'.format(row[1] +" "+ row[2]))
+                    row2 = cursor.fetchone()
+                    if row2:
+                        self.lineEdit_2.setText('{}'.format(row2[1] +" "+ row2[2]))
+                        self.lineEdit_8.setText(str(row2[3]))
                     for row_number, row_data in enumerate(row):
+                        print(row_number, row_data)
                         self.tableWidget.insertRow(row_number)
                         self.tableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(str(row_data[0])))
                         self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[3])))

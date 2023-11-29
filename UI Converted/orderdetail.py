@@ -12,8 +12,9 @@ from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
 from topbar import MenuBar
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
+        super(Ui_MainWindow, self).__init__()
         self.total = 0
         self.data = {}
         self.cid=0
@@ -81,12 +82,11 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         
-        
-        self.pushButton.clicked.connect(self.addtodb)
+        self.pushButton.clicked.connect(lambda: self.addtodb())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
+        
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
@@ -107,7 +107,6 @@ class Ui_MainWindow(object):
         
 
     def populate_table(self):
-        print(self.data)
         self.lineEdit_6.setText('{}'.format(self.orderno))
         self.lineEdit_7.setText('{}'.format(self.total))
     # Assuming that self.data is a list of dictionaries
@@ -122,8 +121,8 @@ class Ui_MainWindow(object):
             for col_num, col_key in enumerate(keys_to_access):
                 item = QtWidgets.QTableWidgetItem(str(row_data.get(col_key, '')))
                 self.tableWidget.setItem(row_num, col_num, item)
-
     def addtodb(self):
+        
         cnxn = None
         order_date = datetime.now().date().strftime('%Y-%m-%d')
         order_time = datetime.now().time().strftime('%H:%M:%S')
@@ -139,7 +138,7 @@ class Ui_MainWindow(object):
                     else:
                         self.cid = 1
                     cursor.execute("INSERT INTO Customers VALUES (?, ?, ?, ?)",self.cid,self.custinfo['fname'], self.custinfo['lname'], self.custinfo['phone'])
-                cursor.execute("INSERT INTO Customer_Order VALUES (?, ?, ?, ?, ?)",self.orderno, self.cid, 1, order_date, order_time)                
+                cursor.execute("INSERT INTO Customer_Order VALUES (?, ?, ?, ?, ?,?)",self.orderno, self.cid, 1, order_date, order_time,'Credit')                
                 for data in self.data:
                     # Check if the product already exists
                     cursor.execute(
@@ -156,13 +155,15 @@ class Ui_MainWindow(object):
                         )
                         cursor.execute("Insert into Customer_Order_Details Values (?,?,?,?)",self.orderno,data['pid'],data['quantity'],data['price'])
                 cursor.commit()
-            # Clear the list after successfully adding to the database
+            # clear all fields
+            self.tableWidget.clearContents()
+            self.tableWidget.setRowCount(0)
+            self.lineEdit_6.clear()
+            self.lineEdit_7.clear()
+            
             self.openwin()
-        
-            self.total = 0
-            self.data = []
-            self.suppid=0
-            self.orderno=0
+            MainWindow.close()
+
         except pyodbc.Error as ex:
             # Handle the exception and inform the user
             msg_box = QtWidgets.QMessageBox()
@@ -175,7 +176,7 @@ class Ui_MainWindow(object):
             # Close the connection in the finally block
             if cnxn:
                 cnxn.close()
-
+                
 
     def openwin(self):
         self.win = QtWidgets.QMainWindow()
@@ -183,6 +184,7 @@ class Ui_MainWindow(object):
         self.ui.setupUi(self.win)
         self.ui.setValues(self.orderno,self.total,self.cid)
         self.win.show()
+        
 
     def setValues(self,data,order,custid,total,custinfo,custindata):
         self.total = total

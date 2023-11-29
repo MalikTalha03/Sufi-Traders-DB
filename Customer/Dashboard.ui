@@ -36,10 +36,10 @@
    <widget class="QWidget" name="widget" native="true">
     <property name="geometry">
      <rect>
-      <x>40</x>
+      <x>20</x>
       <y>80</y>
-      <width>691</width>
-      <height>331</height>
+      <width>751</width>
+      <height>421</height>
      </rect>
     </property>
    </widget>
@@ -56,57 +56,25 @@
      </rect>
     </property>
    </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuCustomer">
-    <property name="title">
-     <string>Customer</string>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>510</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
     </property>
-    <addaction name="actionNew_Order"/>
-    <addaction name="actionGet_Paid"/>
-    <addaction name="actionFind_Order"/>
-    <addaction name="actionUpdate_Customer"/>
-    <addaction name="actionGet_All_Orders"/>
-   </widget>
-   <widget class="QMenu" name="menuSupplier">
-    <property name="title">
-     <string>Supplier</string>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <bold>true</bold>
+     </font>
     </property>
-    <addaction name="actionNew_Order_2"/>
-    <addaction name="actionPay_Supplier"/>
-    <addaction name="actionFind_Supplier"/>
-    <addaction name="actionUpdate_details"/>
-    <addaction name="actionAll_Orderd"/>
-    <addaction name="actionFind_Order_2"/>
-   </widget>
-   <widget class="QMenu" name="menuProduct">
-    <property name="title">
-     <string>Product</string>
+    <property name="text">
+     <string>Monthly Sales</string>
     </property>
-    <addaction name="actionInventory"/>
-    <addaction name="actionAdd_Category"/>
    </widget>
-   <widget class="QMenu" name="menuEmployee">
-    <property name="title">
-     <string>Employee</string>
-    </property>
-    <addaction name="actionAdd"/>
-    <addaction name="actionCheck_Details"/>
-    <addaction name="actionUpdate_Details"/>
-    <addaction name="actionDelete"/>
-   </widget>
-   <addaction name="menuCustomer"/>
-   <addaction name="menuSupplier"/>
-   <addaction name="menuProduct"/>
-   <addaction name="menuEmployee"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew_Order">

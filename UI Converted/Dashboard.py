@@ -7,6 +7,13 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
+from topbar import MenuBar
+import pyodbc
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+import calendar
+from collections import defaultdict
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
 class Ui_MainWindow(object):
@@ -23,83 +30,30 @@ class Ui_MainWindow(object):
         self.label.setFont(font)
         self.label.setObjectName("label")
         self.widget = QtWidgets.QWidget(parent=self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(40, 80, 691, 331))
+        self.widget.setGeometry(QtCore.QRect(20, 80, 751, 421))
         self.widget.setObjectName("widget")
         self.lineEdit = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.lineEdit.setEnabled(False)
         self.lineEdit.setGeometry(QtCore.QRect(230, 20, 141, 41))
         self.lineEdit.setObjectName("lineEdit")
         MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(parent=MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
-        self.menubar.setObjectName("menubar")
-        self.menuCustomer = QtWidgets.QMenu(parent=self.menubar)
-        self.menuCustomer.setObjectName("menuCustomer")
-        self.menuSupplier = QtWidgets.QMenu(parent=self.menubar)
-        self.menuSupplier.setObjectName("menuSupplier")
-        self.menuProduct = QtWidgets.QMenu(parent=self.menubar)
-        self.menuProduct.setObjectName("menuProduct")
-        self.menuEmployee = QtWidgets.QMenu(parent=self.menubar)
-        self.menuEmployee.setObjectName("menuEmployee")
-        MainWindow.setMenuBar(self.menubar)
+        self.label_2 = QtWidgets.QLabel(parent=self.centralwidget)
+        self.label_2.setGeometry(QtCore.QRect(370, 510, 101, 21))
+        font = QtGui.QFont()
+        font.setPointSize(11)
+        font.setBold(True)
+        self.label_2.setFont(font)
+        self.label_2.setObjectName("label_2")
+        menubar = MenuBar(MainWindow)
+        MainWindow.setMenuBar(menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionNew_Order = QtGui.QAction(parent=MainWindow)
-        self.actionNew_Order.setObjectName("actionNew_Order")
-        self.actionGet_Paid = QtGui.QAction(parent=MainWindow)
-        self.actionGet_Paid.setObjectName("actionGet_Paid")
-        self.actionFind_Order = QtGui.QAction(parent=MainWindow)
-        self.actionFind_Order.setObjectName("actionFind_Order")
-        self.actionUpdate_Customer = QtGui.QAction(parent=MainWindow)
-        self.actionUpdate_Customer.setObjectName("actionUpdate_Customer")
-        self.actionGet_All_Orders = QtGui.QAction(parent=MainWindow)
-        self.actionGet_All_Orders.setObjectName("actionGet_All_Orders")
-        self.actionNew_Order_2 = QtGui.QAction(parent=MainWindow)
-        self.actionNew_Order_2.setObjectName("actionNew_Order_2")
-        self.actionPay_Supplier = QtGui.QAction(parent=MainWindow)
-        self.actionPay_Supplier.setObjectName("actionPay_Supplier")
-        self.actionFind_Supplier = QtGui.QAction(parent=MainWindow)
-        self.actionFind_Supplier.setObjectName("actionFind_Supplier")
-        self.actionUpdate_details = QtGui.QAction(parent=MainWindow)
-        self.actionUpdate_details.setObjectName("actionUpdate_details")
-        self.actionAll_Orderd = QtGui.QAction(parent=MainWindow)
-        self.actionAll_Orderd.setObjectName("actionAll_Orderd")
-        self.actionFind_Order_2 = QtGui.QAction(parent=MainWindow)
-        self.actionFind_Order_2.setObjectName("actionFind_Order_2")
-        self.actionInventory = QtGui.QAction(parent=MainWindow)
-        self.actionInventory.setObjectName("actionInventory")
-        self.actionAdd_Category = QtGui.QAction(parent=MainWindow)
-        self.actionAdd_Category.setObjectName("actionAdd_Category")
-        self.actionAdd = QtGui.QAction(parent=MainWindow)
-        self.actionAdd.setObjectName("actionAdd")
-        self.actionCheck_Details = QtGui.QAction(parent=MainWindow)
-        self.actionCheck_Details.setObjectName("actionCheck_Details")
-        self.actionUpdate_Details = QtGui.QAction(parent=MainWindow)
-        self.actionUpdate_Details.setObjectName("actionUpdate_Details")
-        self.actionDelete = QtGui.QAction(parent=MainWindow)
-        self.actionDelete.setObjectName("actionDelete")
-        self.menuCustomer.addAction(self.actionNew_Order)
-        self.menuCustomer.addAction(self.actionGet_Paid)
-        self.menuCustomer.addAction(self.actionFind_Order)
-        self.menuCustomer.addAction(self.actionUpdate_Customer)
-        self.menuCustomer.addAction(self.actionGet_All_Orders)
-        self.menuSupplier.addAction(self.actionNew_Order_2)
-        self.menuSupplier.addAction(self.actionPay_Supplier)
-        self.menuSupplier.addAction(self.actionFind_Supplier)
-        self.menuSupplier.addAction(self.actionUpdate_details)
-        self.menuSupplier.addAction(self.actionAll_Orderd)
-        self.menuSupplier.addAction(self.actionFind_Order_2)
-        self.menuProduct.addAction(self.actionInventory)
-        self.menuProduct.addAction(self.actionAdd_Category)
-        self.menuEmployee.addAction(self.actionAdd)
-        self.menuEmployee.addAction(self.actionCheck_Details)
-        self.menuEmployee.addAction(self.actionUpdate_Details)
-        self.menuEmployee.addAction(self.actionDelete)
-        self.menubar.addAction(self.menuCustomer.menuAction())
-        self.menubar.addAction(self.menuSupplier.menuAction())
-        self.menubar.addAction(self.menuProduct.menuAction())
-        self.menubar.addAction(self.menuEmployee.menuAction())
+        self.todaysales()
+        self.plot()
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        
+        
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -108,28 +62,104 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Today Sales"))
-        self.menuCustomer.setTitle(_translate("MainWindow", "Customer"))
-        self.menuSupplier.setTitle(_translate("MainWindow", "Supplier"))
-        self.menuProduct.setTitle(_translate("MainWindow", "Product"))
-        self.menuEmployee.setTitle(_translate("MainWindow", "Employee"))
-        self.actionNew_Order.setText(_translate("MainWindow", "New Order"))
-        self.actionGet_Paid.setText(_translate("MainWindow", "Get Paid"))
-        self.actionFind_Order.setText(_translate("MainWindow", "Find Order"))
-        self.actionUpdate_Customer.setText(_translate("MainWindow", "Update Customer"))
-        self.actionGet_All_Orders.setText(_translate("MainWindow", "Get All Orders"))
-        self.actionNew_Order_2.setText(_translate("MainWindow", "New Order"))
-        self.actionPay_Supplier.setText(_translate("MainWindow", "Pay Supplier"))
-        self.actionFind_Supplier.setText(_translate("MainWindow", "Find Supplier"))
-        self.actionUpdate_details.setText(_translate("MainWindow", "Update details"))
-        self.actionAll_Orderd.setText(_translate("MainWindow", "All Orders"))
-        self.actionFind_Order_2.setText(_translate("MainWindow", "Find Order"))
-        self.actionInventory.setText(_translate("MainWindow", "Inventory"))
-        self.actionAdd_Category.setText(_translate("MainWindow", "Add Category"))
-        self.actionAdd.setText(_translate("MainWindow", "Add"))
-        self.actionCheck_Details.setText(_translate("MainWindow", "Check Details"))
-        self.actionUpdate_Details.setText(_translate("MainWindow", "Update Details"))
-        self.actionDelete.setText(_translate("MainWindow", "Delete"))
+        self.label_2.setText(_translate("MainWindow", "Monthly Sales"))
+    
+    def plot(self):
+        #plotting a graph for monthly sales and showing in widget
+        self.cnxn_str = (
+            "Driver={SQL Server};"
+            "Server=MALIK-TALHA;"
+            "Database=Sufi_Traders;"
+            "Trusted_Connection=yes;"
+        )
+        try:
+            with pyodbc.connect(self.cnxn_str) as cnxn:
+                cursor = cnxn.cursor()
+                cursor.execute("SELECT * FROM Customer_Order WHERE MONTH(orderDate) = MONTH(GETDATE())")
+                rows = cursor.fetchall()
 
+                current_date = datetime.now()
+                last_day_of_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+                total_sales_per_day = {day: 0 for day in range(1, last_day_of_month.day + 1)}
+
+                if rows:
+                    for row in rows:
+                        cursor.execute(
+                            "SELECT * FROM Customer_Order_Details WHERE orderID = ?", row[0]
+                        )
+                        rows2 = cursor.fetchall()
+
+                        if rows2:
+                            for row2 in rows2:
+                                order_date = datetime.strptime(row[3], '%Y-%m-%d')
+                                total_sales_per_day[order_date.day] += float(row2[2]) * float(row2[3])
+
+            # Plotting the bar graph
+            # Plotting the bar graph
+            fig, ax = plt.subplots()
+            canvas = FigureCanvas(fig)
+            canvas.setGeometry(0, 0, 751, 421)
+            layout = QtWidgets.QVBoxLayout(self.widget)
+            layout.addWidget(canvas)
+
+            # Plotting the line graph on the canvas
+            ax.plot(total_sales_per_day.keys(), total_sales_per_day.values(), color='blue')
+            ax.set_xlabel('Day of the Month')
+            ax.set_ylabel('Total Sales')
+            ax.set_title('Total Sales for Each Day in Current Month')
+
+            # Draw the canvas
+            canvas.draw()
+
+
+                                
+
+        except pyodbc.Error as e:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText(str(e))
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
+
+    def todaysales(self):
+        self.cnxn_str = (
+            "Driver={SQL Server};"
+            "Server=MALIK-TALHA;"
+            "Database=Sufi_Traders;"
+            "Trusted_Connection=yes;"
+        )
+        total = 0
+        try:
+            with pyodbc.connect(self.cnxn_str) as cnxn:
+                cursor = cnxn.cursor()
+                cursor.execute(
+                    "SELECT * FROM Customer_Order WHERE orderDate = ?", datetime.today().strftime('%Y-%m-%d')
+                )
+                rows = cursor.fetchall()
+                if rows:
+                    for row in rows:
+                        cursor.execute(
+                            "SELECT * FROM Customer_Order_Details WHERE orderID = ?", row[0]
+                        )
+                        rows2 = cursor.fetchall()
+                        if rows2:
+                            for row2 in rows2:
+                                total += (row2[2] * row2[3])
+                    self.lineEdit.setText(str(total))
+                else:
+                    self.lineEdit.setText(str(0))
+        except pyodbc.Error as e:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText(str(e))
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.exec()
+        finally:
+            if cnxn:
+                cnxn.close()
 
 if __name__ == "__main__":
     import sys

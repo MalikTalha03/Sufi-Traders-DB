@@ -10,9 +10,9 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from datetime import datetime
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
-        super().__init__()
+        super(Ui_MainWindow, self).__init__()
         self.orderno = 0
         self.total = 0
         self.cid = 0
@@ -41,7 +41,6 @@ class Ui_MainWindow(object):
         self.lineEdit_7.setGeometry(QtCore.QRect(330, 70, 113, 51))
         self.lineEdit_7.setObjectName("lineEdit_7")
         self.lineEdit_8 = QtWidgets.QLineEdit(parent=self.centralwidget)
-        self.lineEdit_8.setEnabled(False)
         self.lineEdit_8.setGeometry(QtCore.QRect(200, 130, 71, 24))
         self.lineEdit_8.setObjectName("lineEdit_8")
         self.lineEdit_6 = QtWidgets.QLineEdit(parent=self.centralwidget)
@@ -122,7 +121,8 @@ class Ui_MainWindow(object):
                     new_tid = max_id + 1
                     cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
                                    new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
-
+                    cursor.execute("Update Customer_Order set paymentStatus = ? where orderID = ?","Paid",self.orderno)
+                    cursor.commit()
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle("Payment Successful")
                     msg_box.setText("Payment completed successfully.")
@@ -139,7 +139,7 @@ class Ui_MainWindow(object):
 
                     if credit_row:
                         # Update credit amount
-                        updated_credit = credit_row[2] + (self.total - entered_amount)
+                        updated_credit = float(credit_row[2]) + float(self.total - entered_amount)
                         cursor.execute("UPDATE Credit_Customers SET totalCredit = ? WHERE creditCustomerID = ?",
                                        updated_credit, credit_row[1])
                     else:
@@ -153,13 +153,16 @@ class Ui_MainWindow(object):
                     order_date = datetime.now().date().strftime('%Y-%m-%d')
                     order_time = datetime.now().time().strftime('%H:%M:%S')
                     cursor.execute("SELECT MAX(transactionID) FROM Customer_Transactions")
-                    max_id = int(cursor.fetchone()[0]) if cursor.fetchone()[0] else 0
+                    max_id_result = cursor.fetchone()
+                    if max_id_result and max_id_result[0] is not None:
+                        max_id = int(max_id_result[0])
+                    else:
+                        max_id = 0
                     new_tid = max_id + 1
                     # Insert transaction details
                     cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
-                                   new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
-                    cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
-                                   new_tid+1,"Credit",(self.total - entered_amount),self.orderno,order_date,order_time )
+                                      new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
+                    cursor.execute("Update Customer_Order set paymentStatus = ? where orderID = ?","Partially Paid",self.orderno)
 
                     # Show success message
                     msg_box = QtWidgets.QMessageBox()
@@ -168,7 +171,7 @@ class Ui_MainWindow(object):
                     msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
                     msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
                     result = msg_box.exec()
-                    self.cleardata()
+                    MainWindow.close()
                     
 
                 else:
@@ -194,13 +197,6 @@ class Ui_MainWindow(object):
             if cnxn:
                 cnxn.close()
 
-
-    def cleardata(self):
-        self.lineEdit_6.clear()
-        self.lineEdit_7.clear()
-        self.lineEdit_8.clear()
-        self.comboBox.clear()
-        self.pushButton.setEnabled(False)
 
     def findorder(self):
         cnxn = None

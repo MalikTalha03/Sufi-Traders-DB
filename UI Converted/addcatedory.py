@@ -91,6 +91,7 @@ class Ui_Form(object):
                 msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
                 msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
                 result = msg_box.exec()
+                Form.close()
         except pyodbc.Error as ex:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Error")

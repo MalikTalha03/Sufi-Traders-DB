@@ -131,7 +131,6 @@ class Ui_Form(object):
                 self.lineEdit_9.setText("")
                 self.lineEdit_8.setText("")
                 self.lineEdit_7.setText("")
-                
         except pyodbc.Error as ex:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Database Error")
