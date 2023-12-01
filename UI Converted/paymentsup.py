@@ -9,15 +9,12 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from datetime import datetime
+from db import DatabaseManager
 
 class Ui_Form(object):
     def __init__(self):
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
+
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 300)
@@ -81,12 +78,13 @@ class Ui_Form(object):
         self.label_9.setText(_translate("Form", "Remaining"))
         self.pushButton.setText(_translate("Form", "Complete Payment"))
         self.label_10.setText(_translate("Form", "Amount"))
+
     def setValues(self,orderid,total,remaining):
         self.lineEdit_6.setText(str(orderid))
         self.lineEdit_7.setText(str(total))
         self.lineEdit_8.setText(str(remaining))
+
     def completepayment(self):
-        cnxn = None
         amount = self.lineEdit_9.text()
         orderid = self.lineEdit_6.text()
         remaining = self.lineEdit_8.text()
@@ -107,40 +105,29 @@ class Ui_Form(object):
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
             return
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                maxid = cursor.execute("SELECT MAX(transactionID) FROM Supplier_Transactions").fetchone()[0]
-                if maxid == None:
+        rows = self.db.fetch("SELECT MAX(transactionID) FROM Supplier_Transactions")
+        if rows:
+            for row in rows:
+                if row[0] == None:
                     maxid = 1
                 else:
-                    maxid = int(maxid) + 1
-                cursor.execute(
-                    "INSERT INTO Supplier_Transactions VALUES (?,?,?,?,?)",maxid,paymentmethod,amount,orderid,datetime.now().strftime("%Y-%m-%d"))
-                cnxn.commit()
-                if float(amount) == float(remaining):
-                    cursor.execute("Update Supplier_Order SET paymentStatus = 'Paid' WHERE orderID = ?",orderid)
-                else:
-                    cursor.execute("Update Supplier_Order SET paymentStatus = 'Partially Paid' WHERE orderID = ?",orderid)
-                msg_box = QtWidgets.QMessageBox()
-                msg_box.setWindowTitle("Payment Completed")
-                msg_box.setText("Payment Completed Successfully")
-                msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                result = msg_box.exec()
-                self.lineEdit_9.setText("")
-                self.lineEdit_8.setText("")
-                self.lineEdit_7.setText("")
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+                    maxid = int(row[0]) + 1
+        else:
+            maxid = 1
+        self.db.execute_query("INSERT INTO Supplier_Transactions VALUES ('{}','{}','{}','{}','{}')".format(maxid,paymentmethod,amount,orderid,datetime.now().strftime("%Y-%m-%d")))
+        if float(amount) == float(remaining):
+            self.db.execute_query("Update Supplier_Order SET paymentStatus = 'Paid' WHERE orderID = '{}'".format(orderid))
+        else:
+            self.db.execute_query("Update Supplier_Order SET paymentStatus = 'Partially Paid' WHERE orderID = '{}'".format(orderid))
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle("Payment Completed")
+        msg_box.setText("Payment Completed Successfully")
+        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
+        self.lineEdit_9.setText("")
+        self.lineEdit_8.setText("")
+        self.lineEdit_7.setText("")
 
 
 if __name__ == "__main__":
