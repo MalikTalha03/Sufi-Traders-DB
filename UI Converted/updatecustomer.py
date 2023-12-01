@@ -8,8 +8,11 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from db import DatabaseManager
 
 class Ui_Form(object):
+    def __init__(self):
+        self.db = DatabaseManager()
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 300)
@@ -43,6 +46,10 @@ class Ui_Form(object):
         self.pushButton = QtWidgets.QPushButton(parent=Form)
         self.pushButton.setGeometry(QtCore.QRect(240, 260, 91, 24))
         self.pushButton.setObjectName("pushButton")
+        self.lineEdit_4.returnPressed.connect(self.findbycontact)
+        self.lineEdit.returnPressed.connect(self.findbyid)
+        self.lineEdit_4.setFocus()
+        self.pushButton.clicked.connect(self.updatecustomer)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
@@ -63,6 +70,66 @@ class Ui_Form(object):
         self.label_3.setText(_translate("Form", "Last Name"))
         self.label_4.setText(_translate("Form", "Customer Contact"))
         self.pushButton.setText(_translate("Form", "Update"))
+
+    def findbyid(self):
+        id = self.lineEdit.text()
+        rows = self.db.execute_read_query("SELECT * FROM Customers WHERE customerID = '{}'".format(id))
+        if rows:
+            for row in rows:
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_3.setText(row[2])
+                self.lineEdit_4.setText(row[3])
+                self.lineEdit.setEnabled(False)
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText("Customer Not Found")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.exec()
+        
+    def findbycontact(self):
+        contact = self.lineEdit_4.text()
+        rows = self.db.execute_read_query("SELECT * FROM Customers WHERE customerContact = '{}'".format(contact))
+        if rows:
+            for row in rows:
+                self.lineEdit.setText(str(row[0]))
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_3.setText(row[2])
+                self.lineEdit.setEnabled(False)
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText("Customer Not Found")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.exec()
+    def updatecustomer(self):
+        if self.lineEdit.text() == "" or self.lineEdit_2.text() == "" or self.lineEdit_3.text() == "" or self.lineEdit_4.text() == "":
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText("Please Fill All Fields")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.exec()
+            return
+        id = self.lineEdit.text()
+        fname = self.lineEdit_2.text()
+        lname = self.lineEdit_3.text()
+        contact = self.lineEdit_4.text()
+        self.db.execute_query("UPDATE Customers SET custFName = '{}', custLName = '{}', customerContact = '{}' WHERE customerID = '{}'".format(fname, lname, contact, id))
+        msg = QtWidgets.QMessageBox()
+        msg.setWindowTitle("Success")
+        msg.setText("Customer Updated Successfully")
+        msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        msg.exec()
+        self.lineEdit.setText("")
+        self.lineEdit_2.setText("")
+        self.lineEdit_3.setText("")
+        self.lineEdit_4.setText("")
+        self.lineEdit_4.setFocus()
+        Form.close()
 
 
 if __name__ == "__main__":
