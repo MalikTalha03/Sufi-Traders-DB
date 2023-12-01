@@ -9,15 +9,10 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from topbar import MenuBar
-
+from db import DatabaseManager
 class Ui_MainWindow(object):
     def __init__(self):
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -113,108 +108,57 @@ class Ui_MainWindow(object):
 
     def findordersbyid(self):
         id = self.lineEdit.text()
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("select * from Customer_Order where customerID=?",id)
-                row = cursor.fetchall()
-                if row:
-                    self.tableWidget.setRowCount(0)
-                    cursor.execute('Select * from Customers where customerID=?',id)
-                    row2 = cursor.fetchone()
-                    if row2:
-                        self.lineEdit_2.setText('{}'.format(row2[1] +" "+ row2[2]))
-                        self.lineEdit_8.setText(str(row2[3]))
-                    for row_number, row_data in enumerate(row):
-                        print(row_number, row_data)
-                        self.tableWidget.insertRow(row_number)
-                        self.tableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(str(row_data[0])))
-                        self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[3])))
-                        self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[4])))
-                        self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[5])))
-                        cursor.execute("SELECT SUM(quantity * salePrice) FROM Customer_Order_Details where orderID=?",row_data[0])
-                        total = cursor.fetchone()[0]
-                        self.tableWidget.setItem(row_number, 3, QtWidgets.QTableWidgetItem(str(total)))
-                        cursor.execute('Select * from Credit_Customers where customerID=?',id)
-                        row = cursor.fetchone()
-                        if row:
-                            self.lineEdit_9.setText(str(row[2]))
-                        else:
-                            self.lineEdit_9.setText('0')
+        id = self.lineEdit.text()
+        rows = self.db.execute_read_query("SELECT * FROM Customer_Order WHERE customerID = {}".format(id))
+        if rows:
+            self.tableWidget.setRowCount(0)
+            rows2 = self.db.execute_read_query("Select * from Customers where customerID={}".format(id))
+            if rows2:
+                for row2 in rows2:
+                    self.lineEdit_2.setText('{}'.format(row2[1] +" "+ row2[2]))
+                    self.lineEdit_8.setText(str(row2[3]))
+            for row_number , row_data in enumerate(rows):
+                self.tableWidget.insertRow(row_number)
+                self.tableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(str(row_data[0])))
+                self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[3])))
+                self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[4])))
+                self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[5])))
+                rows3 = self.db.execute_read_query("SELECT SUM(quantity * salePrice) FROM Customer_Order_Details where orderID={}".format(row_data[0]))
+                for row3 in rows3:
+                    total = row3[0]
+                self.tableWidget.setItem(row_number, 3, QtWidgets.QTableWidgetItem(str(total)))
+                rows4 = self.db.execute_read_query("Select * from Credit_Customers where customerID={}".format(id))
+                if rows4:
+                    for row4 in rows4:
+                        self.lineEdit_9.setText(str(row4[2]))
                 else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No record found against this ID: {}".format(id))
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
+                    self.lineEdit_9.setText('0')
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("No record found against this ID: {}".format(id))
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+        
     def findordersbyname(self):
         name = self.lineEdit_2.text()
         firstName = name.split()[0]
         lastName = name.split()[1]
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select * from Customers where firstName=? and lastName=?",firstName,lastName)
-                row = cursor.fetchone()
-                if row:
-                    id = row[0]
-                    self.lineEdit.setText(str(id))
-                    cursor.execute("select * from Customer_Order where customerID=?",id)
-                row = cursor.fetchall()
-                if row:
-                    self.tableWidget.setRowCount(0)
-                    cursor.execute('Select * from Customers where customerID=?',id)
-                    row = cursor.fetchone()
-                    if row:
-                        self.lineEdit_2.setText('{}'.format(row[1] +" "+ row[2]))
-                    for row_number, row_data in enumerate(row):
-                        self.tableWidget.insertRow(row_number)
-                        self.tableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(str(row_data[0])))
-                        self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[3])))
-                        self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[4])))
-                        self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[5])))
-                        cursor.execute("SELECT SUM(quantity * salePrice) FROM Customer_Order_Details where orderID=?",row_data[0])
-                        total = cursor.fetchone()[0]
-                        self.tableWidget.setItem(row_number, 3, QtWidgets.QTableWidgetItem(str(total)))
-                        cursor.execute('Select * from Credit_Customers where customerID=?',id)
-                        row = cursor.fetchone()
-                        if row:
-                            self.lineEdit_9.setText(str(row[2]))
-                        else:
-                            self.lineEdit_9.setText('0')
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No record found against this ID: {}".format(id))
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                
-                
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
+        
+        row = self.db.execute_read_query("SELECT * FROM Customers WHERE custFName = '{}' AND custLName = '{}'".format(firstName, lastName))
+        if row:
+            for row in row:
+                id = row[0]
+                self.lineEdit.setText(str(id))
+                self.findordersbyid()
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("No record found against this Name: {}".format(name))
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
-
 
 if __name__ == "__main__":
     import sys
