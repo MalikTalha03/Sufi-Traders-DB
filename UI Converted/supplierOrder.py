@@ -11,6 +11,7 @@ from datetime import datetime
 import pyodbc
 from supporderdetail import Ui_MainWindow as supporderdetail
 from topbar import MenuBar
+from db import DatabaseManager
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -18,12 +19,7 @@ class Ui_MainWindow(object):
         self.suppid = 0
         self.row_details = []
         self.category_data = {}
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -171,92 +167,53 @@ class Ui_MainWindow(object):
         
 
     def orderno(self):
-        cnxn = None
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select MAX(orderID) From Supplier_Order")
-                max_order_id = cursor.fetchone()[0]
-
-                if max_order_id is not None:
-                    self.id = int(max_order_id) + 1
-                else:
+        rows  = self.db.execute_read_query("Select MAX(orderID) From Supplier_Order")
+        if rows:
+            for row in rows:
+                if row[0] is None:
                     self.id = 1
-                self.lineEdit_10.setText(str(self.id))
-                self.lineEdit_10.setEnabled(False)
-                
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.MessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
-    def findsupplier(self):
-        cnxn = None
-        id = self.lineEdit.text()
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT * FROM Supplier WHERE supplierID = ?", id)
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit_2.setText(row[1])
-                    self.lineEdit_3.setFocus()
                 else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Supplier Error")
-                    msg_box.setText("Supplier Not Found. Please add supplier before proceeding.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
+                    self.id = int(row[0]) + 1
+        else:
+            self.id = 1
+        self.lineEdit_10.setText(str(self.id))
+
+        
+    def findsupplier(self):
+        
+        id = self.lineEdit.text()
+        row = self.db.execute_read_query("SELECT * FROM Supplier WHERE supplierID = '{}'".format(id))
+        if row:
+            for row in row:
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_3.setFocus()
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Supplier Error")
+            msg_box.setText("Supplier Not Found. Please add supplier before proceeding.")
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
 
     def findproduct(self):
-        cnxn = None
         pid = self.lineEdit_3.text()
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT * FROM Products WHERE productID = ?", pid)
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit_4.setText(str(row[1]))
-                    self.lineEdit_4.setEnabled(False)
-                    self.lineEdit_6.setText(str(row[2]))
-                    category_id = row[3]
-                    category_name = self.get_key_by_value(category_id)
-                    index = self.comboBox.findText(category_name)
-                    print(category_name )
-                    if index != -1:
-                        self.comboBox.setCurrentIndex(index)
-                        self.comboBox.setEnabled(False)
-                    self.lineEdit_5.setFocus()
-                else:
-                    self.lineEdit_4.setFocus()
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+
+        rows = self.db.execute_read_query("SELECT * FROM Products WHERE productID = '{}'".format(pid))
+        if rows:
+            for row in rows:
+                self.lineEdit_4.setText(row[1])
+                self.lineEdit_4.setEnabled(False)
+                self.lineEdit_6.setText(str(row[2]))
+                catid = row[3]
+                catname = self.get_key_by_value(catid)
+                index = self.comboBox.findText(catname)
+                if index != -1:
+                    self.comboBox.setCurrentIndex(index)
+                    self.comboBox.setEnabled(False)
+                self.lineEdit_5.setFocus()
+        else:
+            self.lineEdit_4.setFocus()
+
 
     def get_key_by_value(self,target_value):
         for key, value in self.category_data.items():
@@ -266,7 +223,6 @@ class Ui_MainWindow(object):
 
 
     def addproduct(self):
-        cnxn = None
         if (
             self.lineEdit.text() and self.lineEdit_3.text() and self.lineEdit_4.text()
             and self.lineEdit_6.text() and self.lineEdit_7.text() and self.comboBox.currentIndex() >= 0):
@@ -323,29 +279,14 @@ class Ui_MainWindow(object):
             self.comboBox.setEnabled(True)
             self.fetch_and_populate_categories()
             self.lineEdit_3.setFocus()
-            print(row_detail)
 
     def fetch_and_populate_categories(self):
-        cnxn = None
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT * FROM Categories")
-                rows = cursor.fetchall()
-                self.category_data = {row[1]: row[0] for row in rows}
-                for row in rows:
-                    category_name = row[1]
-                    self.comboBox.addItem(category_name)
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("SELECT * FROM Categories")
+        if rows:
+            self.category_data = {row[1]: row[0] for row in rows}
+            for row in rows:
+                category_name = row[1]
+                self.comboBox.addItem(category_name)
 
     def handle_category_selection(self, index):
         selected_category_name = self.comboBox.currentText()
