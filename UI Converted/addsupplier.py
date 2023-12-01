@@ -8,15 +8,10 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
-
+from db import DatabaseManager
 class Ui_MainWindow(object):
     def __init__(self):
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
         self.id = 0
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -94,62 +89,34 @@ class Ui_MainWindow(object):
         suppName = self.lineEdit_2.text()
         suppContact = self.lineEdit_3.text()
         suppAddress = self.lineEdit_4.text()
-
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select * from Supplier where supplierName = ?", suppName)
-                if cursor.fetchone():
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("Supplier Already Exists.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                else: 
-                    cursor.execute("Insert into Supplier values (?,?,?,?)", suppID,suppName,suppAddress,str(suppContact))
-                    cursor.commit()
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Success")
-                    msg_box.setText("Supplier Added Successfully.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                MainWindow.close()
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("Select * from Supplier where supplierName = '{}'".format(suppName))
+        for row in rows:
+            if row :
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setWindowTitle("Error")
+                msg_box.setText("Supplier Already Exists.")
+                msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                result = msg_box.exec()
+            else:
+                self.db.execute_query("Insert into Supplier values (?,?,?,?)", suppID,suppName,suppAddress,str(suppContact)) 
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setWindowTitle("Success")
+                msg_box.setText("Supplier Added Successfully.")
+                msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+                result = msg_box.exec()
+            MainWindow.close()
 
     def idfind(self):
-        cnxn = None
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select MAX(supplierID) From Supplier")
-                row = cursor.fetchone()
-                if row[0]:
-                    self.id = row[0] + 1
-                else:
-                    self.id = 1
-                self.lineEdit.setText(str(self.id))
-                self.lineEdit.setEnabled(False)
-        except pyodbc.Error as ex:
-            pass
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
-
+        rows = self.db.execute_read_query("Select MAX(supplierID) From Supplier")
+        for row in rows:
+            if row and row[0] is not None:
+                self.id = row[0] + 1
+            else:
+                self.id = 1
+            self.lineEdit.setText(str(self.id))
+            self.lineEdit.setEnabled(False)
 
 if __name__ == "__main__":
     import sys
