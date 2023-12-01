@@ -14,9 +14,12 @@ import matplotlib.pyplot as plt
 import calendar
 from collections import defaultdict
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from db import DatabaseManager
 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.db = DatabaseManager()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -66,63 +69,38 @@ class Ui_MainWindow(object):
     
     def plot(self):
         #plotting a graph for monthly sales and showing in widget
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
-        try:
-            with pyodbc.connect(self.cnxn_str) as cnxn:
-                cursor = cnxn.cursor()
-                cursor.execute("SELECT * FROM Customer_Order WHERE MONTH(orderDate) = MONTH(GETDATE())")
-                rows = cursor.fetchall()
-
-                current_date = datetime.now()
-                last_day_of_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-                total_sales_per_day = {day: 0 for day in range(1, last_day_of_month.day + 1)}
-
-                if rows:
-                    for row in rows:
-                        cursor.execute(
-                            "SELECT * FROM Customer_Order_Details WHERE orderID = ?", row[0]
-                        )
-                        rows2 = cursor.fetchall()
-
-                        if rows2:
-                            for row2 in rows2:
-                                order_date = datetime.strptime(row[3], '%Y-%m-%d')
-                                total_sales_per_day[order_date.day] += float(row2[2]) * float(row2[3])
+        rows = self.db.execute_read_query("SELECT * FROM Customer_Order WHERE MONTH(orderDate) = MONTH(GETDATE())")
+        current_date = datetime.now()
+        last_day_of_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        total_sales_per_day = {day: 0 for day in range(1, last_day_of_month.day + 1)}
+        if rows:
+            for row in rows:
+                rows2 = self.db.execute_read_query("SELECT * FROM Customer_Order_Details WHERE orderID = '{}'".format(row[0]))
+                if rows2:
+                    for row2 in rows2:
+                        order_date = datetime.strptime(row[3], '%Y-%m-%d')
+                        total_sales_per_day[order_date.day] += float(row2[2]) * float(row2[3])
 
             # Plotting the bar graph
             # Plotting the bar graph
-            fig, ax = plt.subplots()
-            canvas = FigureCanvas(fig)
-            canvas.setGeometry(0, 0, 751, 421)
-            layout = QtWidgets.QVBoxLayout(self.widget)
-            layout.addWidget(canvas)
+        fig, ax = plt.subplots()
+        canvas = FigureCanvas(fig)
+        canvas.setGeometry(0, 0, 751, 421)
+        layout = QtWidgets.QVBoxLayout(self.widget)
+        layout.addWidget(canvas)
 
             # Plotting the line graph on the canvas
-            ax.plot(total_sales_per_day.keys(), total_sales_per_day.values(), color='blue')
-            ax.set_xlabel('Day of the Month')
-            ax.set_ylabel('Total Sales')
-            ax.set_title('Total Sales for Each Day in Current Month')
+        ax.plot(total_sales_per_day.keys(), total_sales_per_day.values(), color='blue')
+        ax.set_xlabel('Day of the Month')
+        ax.set_ylabel('Total Sales')
+        ax.set_title('Total Sales for Each Day in Current Month')
 
             # Draw the canvas
-            canvas.draw()
+        canvas.draw()
 
 
                                 
 
-        except pyodbc.Error as e:
-            msg = QtWidgets.QMessageBox()
-            msg.setWindowTitle("Error")
-            msg.setText(str(e))
-            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
 
     def todaysales(self):
         self.cnxn_str = (
