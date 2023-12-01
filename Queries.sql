@@ -105,3 +105,4 @@ orderID int Foreign Key References Supplier_Order(orderID) Not Null,
 transactionDate date Not Null
 );
 
+
