@@ -8,15 +8,10 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
-
+from db import DatabaseManager
 class Ui_MainWindow(object):
     def __init__(self):
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -113,40 +108,20 @@ class Ui_MainWindow(object):
         address = self.lineEdit_4.text()
         salary = self.lineEdit_5.text()
         typee =  self.comboBox.currentText()
-        cnxn = None
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT MAX(employeeID) FROM Employee")
-                max_order_id = cursor.fetchone()[0]
-
-                if max_order_id is not None:
-                    self.order_id = int(max_order_id) + 1
-                else:
-                    # If the table is empty, start with order ID 1
-                    self.order_id = 1
-                cursor.execute("INSERT into Employee Values(?,?,?,?,?,?,?)",self.order_id,fname,lname,contact,address,salary,typee)
-                cursor.commit()
-                msg_box = QtWidgets.QMessageBox()
-                msg_box.setWindowTitle("Employee Added")
-                msg_box.setText("Employee Added Successfully..")
-                msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                result = msg_box.exec()
-                MainWindow.close()
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("SELECT MAX(employeeID) FROM Employee ")
+        for row in rows:
+            if row and row[0] is not None:
+                self.order_id = row[0] + 1
+            else:
+                self.order_id = 1
+        self.db.execute_query("INSERT into Employee Values({},{},{},{},{},{},{})".format(self.order_id,fname,lname,contact,address,salary,typee))
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle("Employee Added")
+        msg_box.setText("Employee Added Successfully..")
+        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
+        MainWindow.close()
 
 
 
