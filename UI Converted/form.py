@@ -1,6 +1,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from topbar import MenuBar
+from db import DatabaseManager
 class Ui_MainWindow(object):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
@@ -10,12 +11,7 @@ class Ui_MainWindow(object):
         self.total = 0.0  # initialize total in the __init__ method
         self.customerinfo = {} 
         self.custindata = False
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
         self.orderid()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -151,32 +147,16 @@ class Ui_MainWindow(object):
     
 
     def orderid(self):
-        cnxn = None
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT MAX(orderID) FROM Customer_Order")
-                row = cursor.fetchone()
-
-                if row and row[0] is not None:
+        rows = self.db.execute_read_query("SELECT MAX(orderID) FROM Customer_Order")
+        if rows:
+            for row in rows:
+                if row[0] is not None:
                     self.order_id = int(row[0]) + 1
                 else:
-                    # If the table is empty, start with order ID 1
                     self.order_id = 1
-
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+        else:
+            self.order_id = 1
+        
 
     def move(self):
         self.lineEdit_5.setFocus()
@@ -185,74 +165,53 @@ class Ui_MainWindow(object):
     # Get data from line edits
         product_name = self.lineEdit_4.text()
         quantity = self.lineEdit_5.text()
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT * FROM Products WHERE productName = ?", product_name)
-                row = cursor.fetchone()
-                
-                if row:
-                    if int(quantity) <= row[5]:
-                        for row_num in range(self.tableWidget.rowCount()):
-                            if self.tableWidget.item(row_num, 0).text() == str(row[0]):
-                                current_quantity = int(self.tableWidget.item(row_num, 3).text())
-                                new_quantity = current_quantity + int(quantity)
+        rows = self.db.execute_read_query("SELECT * FROM Products WHERE productName = '{}'".format(product_name))
+        if rows:
+            for row in rows:
+                if int(quantity) <= row[5]:
+                    for row_num in range(self.tableWidget.rowCount()):
+                        if self.tableWidget.item(row_num, 0).text() == str(row[0]):
+                            current_quantity = int(self.tableWidget.item(row_num, 3).text())
+                            new_quantity = current_quantity + int(quantity)
 
-                                if new_quantity <= row[5]:  # Check if there is enough stock available
-                                    self.tableWidget.setItem(row_num, 3, QtWidgets.QTableWidgetItem(str(new_quantity)))
+                            if new_quantity <= row[5]:  # Check if there is enough stock available
+                                self.tableWidget.setItem(row_num, 3, QtWidgets.QTableWidgetItem(str(new_quantity)))
 
-                                    product_price = row[2]  # price will be fetched from db
-                                    total_price = float(product_price * new_quantity)
-                                    self.tableWidget.setItem(row_num, 4, QtWidgets.QTableWidgetItem(str(total_price)))
+                                product_price = row[2]
+                                total_price = float(product_price * new_quantity)
+                                self.tableWidget.setItem(row_num, 4, QtWidgets.QTableWidgetItem(str(total_price)))
 
-                
+                                self.total += float(product_price * int(quantity))
+                                self.lineEdit_7.setText(str(self.total))
 
-                                    self.total += float(product_price * int(quantity))
-                                    self.lineEdit_7.setText(str(self.total))
+                                for detail in self.row_details:
+                                    if detail['pid'] == row[0]:
+                                        detail['quantity'] = new_quantity
+                                        detail['total_price'] = total_price
+                                for col in range(self.tableWidget.columnCount()):
+                                    item = self.tableWidget.item(row_num, col)
+                                    if item:
+                                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
-                                    for detail in self.row_details:
-                                        if detail['pid'] == row[0]:
-                                            detail['quantity'] = new_quantity
-                                            detail['total_price'] = total_price
-                                    for col in range(self.tableWidget.columnCount()):
-                                        item = self.tableWidget.item(row_num, col)
-                                        if item:
-                                            item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-
-                                    # Clear the line edits
-                                    self.lineEdit_5.clear()
-                                    self.lineEdit_4.clear()
-                                    self.lineEdit_4.setFocus()
-                                    return  # Exit the function since the product is already in the list
-                                    
-
-                                else:
-                                    self.showStockIssueMessageBox(row[5])
-                                    return  # Exit the function since there is not enough stock
-
-                        # If the loop completes without returning, it means the product is not in the list
-                        self.addNewProductRow(row, quantity)
-                    else:
-                        self.showStockIssueMessageBox(row[5])
+                                # Clear the line edits
+                                self.lineEdit_5.clear()
+                                self.lineEdit_4.clear()
+                                self.lineEdit_4.setFocus()
+                                return
+                            else:
+                                self.showStockIssueMessageBox(row[5])
+                                return
+                    # If the loop completes without returning, it means the product is not in the list
+                    self.addNewProductRow(row, quantity)
                 else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No Product found against Name: {}".format(product_name))
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
+                    self.showStockIssueMessageBox(row[5])
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("No Product found against Name: {}".format(product_name))
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
 
 
     def addNewProductRow(self, row, quantity):
@@ -317,40 +276,21 @@ class Ui_MainWindow(object):
         msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
 
         result = msg_box.exec()
-    def handle_lineEdit3_enter(self):
-    # Initialize cnxn to None
-        cnxn = None
-        
+    def handle_lineEdit3_enter(self):        
         phone = self.lineEdit_3.text()
-        
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("SELECT * FROM Customers WHERE customerContact = ?", phone)
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit.setText(row[1])
-                    self.lineEdit_2.setText(row[2])
-                    self.lineEdit_8.setText(str(row[0]))
-                    self.lineEdit.setEnabled(False)
-                    self.lineEdit_2.setEnabled(False)
-                    self.lineEdit_8.setEnabled(False)
-                    self.lineEdit_4.setFocus()
-                    self.custindata = True
-                else:
-                    self.lineEdit.setFocus()
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("SELECT * FROM Customers WHERE customerContact = '{}'".format(phone))
+        if rows:
+            for row in rows:
+                self.lineEdit.setText(row[1])
+                self.lineEdit_2.setText(row[2])
+                self.lineEdit_8.setText(str(row[0]))
+                self.lineEdit.setEnabled(False)
+                self.lineEdit_2.setEnabled(False)
+                self.lineEdit_8.setEnabled(False)
+                self.lineEdit_4.setFocus()
+                self.custindata = True
+        else:
+            self.lineEdit.setFocus()
 
     def opennextwin(self):
         if(self.lineEdit_3.text() == ""):
