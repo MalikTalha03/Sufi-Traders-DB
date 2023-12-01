@@ -10,18 +10,15 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from datetime import datetime
 from topbar import MenuBar
+from db import DatabaseManager
+
 
 class Ui_MainWindow(object):
     def __init__(self):
         self.total = 0
         self.data = []
         self.suppid=0
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
         self.id = 0
         
     def setupUi(self, MainWindow):
@@ -70,15 +67,12 @@ class Ui_MainWindow(object):
         font1.setPointSize(11)
         font1.setBold(True)
         self.label_2.setFont(font1)
-
         MainWindow.setCentralWidget(self.centralwidget)
-        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         menubar = MenuBar(MainWindow)
         MainWindow.setMenuBar(menubar)
-        
         self.pushButton.clicked.connect(self.addtodb)
         self.lineEdit.returnPressed.connect(self.findorder)
         self.lineEdit.setFocus()
@@ -104,82 +98,54 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "Add"))
         self.label.setText(_translate("MainWindow", "Order No"))
         self.label_2.setText(_translate("MainWindow", "Total"))
-                
         
     def findorder(self):
-        cnxn = None
         total = 0
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select * From Supplier_Order Where orderID=?",self.lineEdit.text())
-                order = cursor.fetchone()
-                if order is not None:
-                    self.lineEdit.setEnabled(False)
-                    self.id = order[0]
-                    self.suppid = order[2]
-                    self.total = order[4]
-                    cursor.execute("Select * From Supplier_Order_Details Where orderID=?",self.lineEdit.text())
-                    order_details = cursor.fetchall()
-                    for row in order_details:
-                        cursor.execute("Select * From Products Where productID=?",row[1])
-                        product = cursor.fetchone()
-                        cursor.execute("Select * From Categories Where categoryID=?",product[3])
-                        category = cursor.fetchone()[1]
-                        data = {
-                            'pid': product[0],
-                            'cname': category,
-                            'pname': product[1],
-                            'purprice': row[2],
-                            'inv': row[3],
-                            'total_price': row[2]*row[3]
-                        }
-                        total += data['total_price']
-                        self.data.append(data)
-                    self.lineEdit_2.setText(str(total))
-                    self.populate_table()
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("Order Not Found")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
+        rows = self.db.execute_read_query("Select * From Supplier_Order Where orderID='{}'".format(self.lineEdit.text()))
+        if rows:
+            for row in rows:
+                self.lineEdit.setEnabled(False)
+                self.id = row[0]
+                self.suppid = row[2]
+                self.total = row[4]
+                rows1 = self.db.execute_read_query("Select * From Supplier_Order_Details Where orderID='{}'".format(self.lineEdit.text()))
+                for row1 in rows1:
+                    rows2 = self.db.execute_read_query("Select * From Products Where productID='{}'".format(row1[1]))
+                    for row2 in rows2:
+                        rows3 = self.db.execute_read_query("Select * From Categories Where categoryID='{}'".format(row2[3]))
+                        for row3 in rows3:
+                            data = {
+                                'pid': row2[0],
+                                'cname': row3[1],
+                                'pname': row2[1],
+                                'purprice': row1[2],
+                                'inv': row1[3],
+                                'total_price': row1[2]*row1[3]
+                            }
+                            total += data['total_price']
+                            self.data.append(data)
+                self.lineEdit_2.setText(str(total))
+                self.populate_table()
+                self.pushButton.setEnabled(False)
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Order Not Found")
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
     def orderno(self):
-        cnxn = None
-        try:
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select MAX(orderID) From Supplier_Order")
-                max_order_id = cursor.fetchone()[0]
-
-                if max_order_id is not None:
-                    self.id = int(max_order_id) + 1
+        rows = self.db.execute_read_query("Select * From Supplier_Order")
+        if rows:
+            for row in rows:
+                if row[0] is not None:
+                    self.id = int(row[0]) + 1
                 else:
                     self.id = 1
-                self.lineEdit.setText(str(self.id))
-                self.lineEdit.setEnabled(False)
-                
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+        else:
+            self.id = 1
+        self.lineEdit.setText(str(self.id))
+        self.lineEdit.setEnabled(False)
 
     def populate_table(self):
     # Assuming that self.data is a list of dictionaries
@@ -196,64 +162,34 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem(row_num, col_num, item)
 
     def addtodb(self):
-        cnxn = None
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Insert into Supplier_Order Values (?,?,?,?,?)", self.id,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total,'Not Paid')
-                for data in self.data:
-                    # Check if the product already exists
-                    cursor.execute(
-                        "SELECT * FROM Products WHERE productID = ?", data['pid'])
-                    existing_product = cursor.fetchone()
-
-                    if existing_product is not None:
+        rows = self.db.execute_query("Insert into Supplier_Order Values ('{}','{}','{}','{}','{}')".format(self.id,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total,'Not Paid'))
+        for data in self.data:
+            rows = self.db.execute_read_query("Select * From Products Where productID='{}'".format(data['pid']))
+            if rows:
+                for row in rows:
+                    existing_product = row
+            if existing_product is not None:
                         # Product already exists, update quantity or price
-                        new_quantity = existing_product[5] + data['inv']
-                        new_price = data['sale_price']  # You can modify this according to your requirements
-
-                        cursor.execute(
-                            "UPDATE Products SET inventory = ?, salePrice = ? "
-                            "WHERE productID = ?",
-                            new_quantity, new_price, data['pid']
-                        )
-                        cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)",self.id,data['pid'],data['purprice'],data['inv'])
-
-                    else:
+                new_quantity = existing_product[5] + data['inv']
+                new_price = data['sale_price']
+                self.db.execute_query("UPDATE Products SET inventory = '{}', salePrice = '{}' WHERE productID = '{}'".format(new_quantity, new_price, data['pid']))
+                self.db.execute_query("Insert into Supplier_Order_Details Values ('{}','{}','{}','{}')".format(self.id,data['pid'],data['purprice'],data['inv']))
+            else:
                         # Product doesn't exist, insert a new record
-                        cursor.execute(
-                            "INSERT INTO Products VALUES (?, ?, ?, ?, ?, ?)",
-                            data['pid'], data['pname'], data['sale_price'],
-                            data['cid'], self.suppid, data['inv']
-                        )
-                        cursor.execute("Insert into Supplier_Order_Details Values (?,?,?,?)", self.id,data['pid'],data['purprice'],data['inv'])
-                cursor.commit()
-            # Clear the list after successfully adding to the database
-            self.total = 0
-            self.data = []
-            self.suppid=0
-            self.orderno=0
-            self.tableWidget.clearContents()
-            self.tableWidget.setRowCount(0)
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Success")
-            msg_box.setText("Order Added Successfully")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+                self.db.execute_query("INSERT INTO Products VALUES ('{}', '{}', '{}', '{}', '{}', '{}')".format(data['pid'], data['pname'], data['sale_price'],data['cid'], self.suppid, data['inv']))
+                self.db.execute_query("Insert into Supplier_Order_Details Values ('{}','{}','{}','{}')".format(self.id,data['pid'],data['purprice'],data['inv']))
+        self.total = 0
+        self.data = []
+        self.suppid=0
+        self.orderno=0
+        self.tableWidget.clearContents()
+        self.tableWidget.setRowCount(0)
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle("Success")
+        msg_box.setText("Order Added Successfully")
+        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
 
     def setValues(self,data,suppid,total):
         self.data = data
