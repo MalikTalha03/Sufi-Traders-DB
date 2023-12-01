@@ -9,19 +9,14 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
 from datetime import datetime
-
+from db import DatabaseManager
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
         self.orderno = 0
         self.total = 0
         self.cid = 0
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(476, 324)
@@ -99,164 +94,124 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.comboBox.setFocus()
 
     def payment(self):
-        cnxn = None
         payment_method = self.comboBox.currentText()
         entered_amount = float(self.lineEdit_8.text())
-
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                # Check if entered amount is equal to the total
-                if entered_amount == self.total:
-                    # Insert transaction details
-                    order_date = datetime.now().date().strftime('%Y-%m-%d')
-                    order_time = datetime.now().time().strftime('%H:%M:%S')
-                    cursor.execute("SELECT MAX(transactionID) FROM Customer_Transactions")
-                    max_id_result = cursor.fetchone()
-                    if max_id_result and max_id_result[0] is not None:
-                        max_id = int(max_id_result[0])
+        if entered_amount == self.total:
+            order_date = datetime.now().date().strftime('%Y-%m-%d')
+            order_time = datetime.now().time().strftime('%H:%M:%S')
+            rows = self.db.execute_read_query("SELECT MAX(transactionID) FROM Customer_Transactions")
+            if rows :
+                for row in rows:
+                    if row and row[0]:
+                        max_id = int(row[0])
                     else:
                         max_id = 0
-                    new_tid = max_id + 1
-                    cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
-                                   new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
-                    cursor.execute("Update Customer_Order set paymentStatus = ? where orderID = ?","Paid",self.orderno)
-                    cursor.commit()
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Payment Successful")
-                    msg_box.setText("Payment completed successfully.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                    self.cleardata()
-                    
-
-                elif entered_amount < self.total:
-                    # Check if customer is in credit table
-                    cursor.execute("SELECT * FROM Credit_Customers WHERE customerID = ?", self.cid)
-                    credit_row = cursor.fetchone()
-
-                    if credit_row:
-                        # Update credit amount
-                        updated_credit = float(credit_row[2]) + float(self.total - entered_amount)
-                        cursor.execute("UPDATE Credit_Customers SET totalCredit = ? WHERE creditCustomerID = ?",
-                                       updated_credit, credit_row[1])
-                    else:
-                        cursor.execute("SELECT MAX(creditCustomerID) FROM Credit_Customers")
-                        max_id = int(cursor.fetchone()[0]) if cursor.fetchone()[0] else 0
-                        new_credit_customer_id = max_id + 1
-                        # Add a new entry in the credit table
-                        cursor.execute("INSERT INTO Credit_Customers VALUES (?, ?, ?)",
-                                       new_credit_customer_id,self.cid, (self.total - entered_amount))
-                        
-                    order_date = datetime.now().date().strftime('%Y-%m-%d')
-                    order_time = datetime.now().time().strftime('%H:%M:%S')
-                    cursor.execute("SELECT MAX(transactionID) FROM Customer_Transactions")
-                    max_id_result = cursor.fetchone()
-                    if max_id_result and max_id_result[0] is not None:
-                        max_id = int(max_id_result[0])
-                    else:
-                        max_id = 0
-                    new_tid = max_id + 1
-                    # Insert transaction details
-                    cursor.execute("INSERT INTO Customer_Transactions VALUES (?, ?, ?,?,?,?)",
-                                      new_tid,payment_method,entered_amount,self.orderno,order_date,order_time )
-                    cursor.execute("Update Customer_Order set paymentStatus = ? where orderID = ?","Partially Paid",self.orderno)
-
-                    # Show success message
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Payment Successful")
-                    msg_box.setText("Partial payment completed successfully.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                    MainWindow.close()
-                    
-
-                else:
-                    # Show error message if entered amount exceeds the total
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Payment Error")
-                    msg_box.setText("Entered amount exceeds the total.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                    
-                
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
+            else:
+                max_id = 0
+            new_tid = max_id + 1
+            self.db.execute_query("INSERT INTO Customer_Transactions VALUES ('{}', '{}', '{}', '{}', '{}', '{}')".format(new_tid,payment_method,entered_amount,self.orderno,order_date,order_time ))
+            self.db.execute_query("Update Customer_Order set paymentStatus = 'Paid' where orderID = '{}'".format(self.orderno))
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: ?",ex)
+            msg_box.setWindowTitle("Payment Successful")
+            msg_box.setText("Payment completed successfully.")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            MainWindow.close()
+        elif entered_amount < self.total:
+            rows = self.db.execute_read_query("SELECT * FROM Credit_Customers WHERE customerID = '{}'".format(self.cid))
+            if rows:
+                for row in rows:
+                    credit_row = row
+            if credit_row:
+                updated_credit = float(credit_row[2]) + float(self.total - entered_amount) 
+                self.db.execute_query("UPDATE Credit_Customers SET totalCredit = '{}' WHERE creditCustomerID = '{}'".format(updated_credit, credit_row[1]))
+            else:
+                rows = self.db.execute_read_query("SELECT MAX(creditCustomerID) FROM Credit_Customers")
+                if rows:
+                    for row in rows:
+                        if row and row[0]:
+                            max_id = int(row[0])
+                        else:
+                            max_id = 0
+                else:
+                    max_id = 0
+                new_credit_customer_id = max_id + 1
+                self.db.execute_query("INSERT INTO Credit_Customers VALUES ('{}', '{}', '{}')".format(new_credit_customer_id,self.cid, (self.total - entered_amount)))
+            order_date = datetime.now().date().strftime('%Y-%m-%d')
+            order_time = datetime.now().time().strftime('%H:%M:%S')
+            self.db("SELECT MAX(transactionID) FROM Customer_Transactions")
+            if rows :
+                for row in rows:
+                    if row and row[0]:
+                        max_id = int(row[0])
+                    else:
+                        max_id = 0
+            else:
+                max_id = 0
+            new_tid = max_id + 1
+            self.db.execute_query("INSERT INTO Customer_Transactions VALUES ('{}', '{}', '{}', '{}', '{}', '{}')".format(new_tid,payment_method,entered_amount,self.orderno,order_date,order_time ))
+            self.db.execute_query("Update Customer_Order set paymentStatus = 'Partially Paid' where orderID = '{}'".format(self.orderno))
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Payment Successful")
+            msg_box.setText("Partial payment completed successfully.")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            MainWindow.close()
+        else:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Payment Error")
+            msg_box.setText("Entered amount exceeds the total.")
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
-
+            self.lineEdit_8.setFocus()
+            self.lineEdit_8.selectAll()
+                
 
     def findorder(self):
-        cnxn = None
         id = self.lineEdit_6.text()
         self.lineEdit_6.setEnabled(False)
         total = 0
         totalpaid = 0
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select * from Customer_Order_Details Where orderId=?",id)
-                rows = cursor.fetchall()
-                for row in rows:
-                    prodtot = 0
-                    pid=row[1]
-                    quantity= row[2]
-                    cursor.execute("Select * from Products Where productID = ?",pid)
-                    prodprice=cursor.fetchone()[2]
-                    prodtot = int(quantity) * int(prodprice)
-                    total = total + prodtot
-                self.lineEdit_7.setText(str(total))
-                cursor.execute("SELECT * FROM Customer_Transactions WHERE orderID = ? AND transactionType IN (?, ?)", (id, 'Cash', 'Bank Transfer'))
-                rows = cursor.fetchall()
-                for row in rows:
-                    totalpaid = totalpaid + row[2]
-                rem = total -totalpaid
-                if rem == 0 :
-                    self.lineEdit_8.setText(str(rem))
-                    self.pushButton.setEnabled(False)
-                else:
-                    self.lineEdit_8.setText(str(rem))
-                cursor.execute("Select * from Customer_Order Where orderID=?",id)
-                cid = cursor.fetchone()
-                if cid:
-                    self.cid = cid[1]
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Order Not Found")
-                    msg_box.setText("Order not found.")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-                    self.cleardata()
-                    self.lineEdit_6.setEnabled(True)
-                    self.lineEdit_6.setFocus()
-            self.orderno = id
-            self.total = total
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
+        rows = self.db.execute_read_query("SELECT * FROM Customer_Order_Details WHERE orderID = '{}'".format(id))
+        if rows:
+            for row in rows:
+                prodtot = 0
+                pid=row[1]
+                quantity= row[2]
+                prodprice=row[3]
+                prodtot = int(quantity) * int(prodprice)
+                total = total + prodtot
+        self.lineEdit_7.setText(str(total))
+        rows = self.db.execute_read_query("SELECT * FROM Customer_Transactions WHERE orderID = '{}' AND transactionType IN ('Cash', 'Bank Transfer')".format(id))
+        if rows:
+            for row in rows:
+                totalpaid = totalpaid + row[2]
+        rem = total -totalpaid
+        if rem == 0 :
+            self.lineEdit_8.setText(str(rem))
+            self.pushButton.setEnabled(False)
+        else:
+            self.lineEdit_8.setText(str(rem))   
+        rows = self.db.execute_read_query("SELECT * FROM Customer_Order WHERE orderID = '{}'".format(id))
+        if rows:
+            for row in rows:
+                self.cid = row[1]
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: ?",ex)
+            msg_box.setWindowTitle("Order Not Found")
+            msg_box.setText("Order not found.")
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+            self.cleardata()
+            self.lineEdit_6.setEnabled(True)
+            self.lineEdit_6.setFocus()
+        self.orderno = id
+        self.total = total
+
 
 
 if __name__ == "__main__":
