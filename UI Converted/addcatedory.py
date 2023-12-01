@@ -8,17 +8,13 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
+from db import DatabaseManager
 
 class Ui_Form(object):
     def __init__(self) :
         super().__init__()
         
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
         self.id = 0
         self.idfind()
     def setupUi(self, Form):
@@ -58,51 +54,25 @@ class Ui_Form(object):
         self.label_2.setText(_translate("Form", "Category Name"))
     
     def idfind(self):
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Select MAX(categoryID) From Categories")
-                row = cursor.fetchone()
-                if row and row[0] is not None:
-                    self.id = row[0] + 1
-                else:
-                    self.id = 1
-        except pyodbc.Error as ex:
-            pass
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("Select MAX(categoryID) From Categories")
+        for row in rows:
+            if row and row[0] is not None:
+                self.id = row[0] + 1
+            else:
+                self.id = 1
 
     def addcategory(self):
-        cnxn = None
+        
         cid = self.lineEdit.text()
         cname = self.lineEdit_2.text()
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                cursor.execute("Insert into Categories values (?,?)", cid,cname)
-                cursor.commit()
-                msg_box = QtWidgets.QMessageBox()
-                msg_box.setWindowTitle("Success")
-                msg_box.setText("Category added successfully .")
-                msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                result = msg_box.exec()
-                Form.close()
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("{}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_query("Insert into Categories values ({},'{}')".format(cid,cname))
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle("Success")
+        msg_box.setText("Category added successfully .")
+        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
+        Form.close()
 
 
 if __name__ == "__main__":
