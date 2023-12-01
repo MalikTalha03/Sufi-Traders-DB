@@ -8,15 +8,10 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
-
+from db import DatabaseManager
 class Ui_Form(object):
     def __init__(self): 
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 300)
@@ -71,97 +66,51 @@ class Ui_Form(object):
 
     def findbyid(self):
         id = self.lineEdit.text()
-        cnxn = None
-        try:
-            with pyodbc.connect(self.cnxn_str) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT * FROM Supplier WHERE supplierID = ?", id
-                )
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit_2.setText(row[1])
-                    self.lineEdit_3.setText(row[3])
-                    self.lineEdit_4.setText(row[2])
-                else:
-                    msg = QtWidgets.QMessageBox()
-                    msg.setWindowTitle("Error")
-                    msg.setText("Supplier Not Found")
-                    msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    msg.exec()
-        except pyodbc.Error as ex:
+        rows = self.db.execute_read_query("SELECT * FROM Supplier WHERE supplierID = '{}'".format(id))
+        if rows:
+            for row in rows:
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_3.setText(row[3])
+                self.lineEdit_4.setText(row[2])
+        else:
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Error")
-            msg.setText("Database Error: {}".format(ex))
+            msg.setText("Supplier Not Found")
             msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             msg.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+
     def findbyname(self):
         name = self.lineEdit_2.text()
-        cnxn = None
-        try:
-            with pyodbc.connect(self.cnxn_str) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT * FROM Supplier WHERE supplierName = ?", name
-                )
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit.setText(str(row[0]))
-                    self.lineEdit_3.setText(str(row[3]))
-                    self.lineEdit_4.setText(str(row[2]))
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No Supplier Found")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("SELECT * FROM Supplier WHERE supplierName = '{}'".format(name))
+        if rows:
+            for row in rows:
+                self.lineEdit.setText(str(row[0]))
+                self.lineEdit_3.setText(row[3])
+                self.lineEdit_4.setText(row[2])
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText("Supplier Not Found")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.exec()
+        
     def findbycontact(self):
         contact = self.lineEdit_3.text()
-        cnxn = None
-        try:
-            with pyodbc.connect(self.cnxn_str) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT * FROM Supplier WHERE supplierContact = ?", contact
-                )
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit.setText(str(row[0]))
-                    self.lineEdit_2.setText(str(row[1]))
-                    self.lineEdit_4.setText(str(row[2]))
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No Supplier Found")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
+        rows = self.db.execute_read_query("SELECT * FROM Supplier WHERE supplierContact = '{}'".format(contact))
+        if rows:
+            for row in rows:
+                self.lineEdit.setText(str(row[0]))
+                self.lineEdit_2.setText(row[1])
+                self.lineEdit_4.setText(row[2])
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Error")
+            msg.setText("Supplier Not Found")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            msg.exec()          
 
 
 if __name__ == "__main__":
