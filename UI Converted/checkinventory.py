@@ -8,15 +8,11 @@
 
 from PyQt6 import QtCore, QtGui, QtWidgets
 import pyodbc
-
+from db import DatabaseManager
 class Ui_Form(object):
     def __init__(self):
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
+        
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(344, 241)
@@ -55,62 +51,33 @@ class Ui_Form(object):
         self.label_3.setText(_translate("Form", "Available Stock"))
     def findbyid(self):
         id = self.lineEdit.text()
-        cnxn = None
-        try:
-            with pyodbc.connect(self.cnxn_str) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Products WHERE ProductID = ?", id)
-                row = cursor.fetchone()
-                if row:
+        rows = self.db.execute_read_query("SELECT * FROM Products WHERE ProductID = {}".format(id))
+        if rows:
+            for row in rows:
                     self.lineEdit_2.setText(str(row[1]))
                     self.lineEdit_3.setText(str(row[5]))
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No Product Found")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("No Product Found")
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
-    
+
     def findbyname(self):
         name = self.lineEdit_2.text()
-        cnxn = None
-        try:
-            with pyodbc.connect(self.cnxn_str) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM Products WHERE productName = ?", name)
-                row = cursor.fetchone()
-                if row:
-                    self.lineEdit.setText(str(row[0]))
-                    self.lineEdit_3.setText(str(row[5]))
-                else:
-                    msg_box = QtWidgets.QMessageBox()
-                    msg_box.setWindowTitle("Error")
-                    msg_box.setText("No Product Found")
-                    msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-                    result = msg_box.exec()
-        except pyodbc.Error as ex:
+        rows = self.db.execute_read_query("SELECT * FROM Products WHERE productName = '{}'".format(name))
+        if rows:
+            for row in rows:
+                self.lineEdit.setText(str(row[0]))
+                self.lineEdit_3.setText(str(row[5]))
+        else:
             msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("No Product Found")
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        finally:
-            if cnxn:
-                cnxn.close()
-
 
 if __name__ == "__main__":
     import sys
