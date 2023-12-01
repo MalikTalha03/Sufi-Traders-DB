@@ -11,6 +11,7 @@ import pyodbc
 from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
 from topbar import MenuBar
+from db import DatabaseManager
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -21,12 +22,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.orderno=0
         self.custindata = True
         self.custinfo = {}
-        self.cnxn_str = (
-            "Driver={SQL Server};"
-            "Server=MALIK-TALHA;"
-            "Database=Sufi_Traders;"
-            "Trusted_Connection=yes;"
-        )
+        self.db = DatabaseManager()
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -109,75 +105,46 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def populate_table(self):
         self.lineEdit_6.setText('{}'.format(self.orderno))
         self.lineEdit_7.setText('{}'.format(self.total))
-    # Assuming that self.data is a list of dictionaries
         for row_num, row_data in enumerate(self.data):
-            # Add a new row to the table widget
             self.tableWidget.insertRow(row_num)
-
-            # Define the keys you want to access
             keys_to_access = ['pid', 'pname', 'price', 'quantity', 'total_price']
-
-            # Loop through the keys and set the items using the keys
             for col_num, col_key in enumerate(keys_to_access):
                 item = QtWidgets.QTableWidgetItem(str(row_data.get(col_key, '')))
                 self.tableWidget.setItem(row_num, col_num, item)
+
+
     def addtodb(self):
-        
-        cnxn = None
         order_date = datetime.now().date().strftime('%Y-%m-%d')
         order_time = datetime.now().time().strftime('%H:%M:%S')
-        try:
-            # Assign the connection to cnxn
-            cnxn = pyodbc.connect(self.cnxn_str)
-            with cnxn.cursor() as cursor:
-                if self.custindata == False:
-                    cursor.execute("Select MAX(customerID) from Customers")
-                    row = cursor.fetchone()
-                    if row and row[0]:
-                        self.cid = row[0] + 1
-                    else:
-                        self.cid = 1
-                    cursor.execute("INSERT INTO Customers VALUES (?, ?, ?, ?)",self.cid,self.custinfo['fname'], self.custinfo['lname'], self.custinfo['phone'])
-                cursor.execute("INSERT INTO Customer_Order VALUES (?, ?, ?, ?, ?,?)",self.orderno, self.cid, 1, order_date, order_time,'Credit')                
-                for data in self.data:
-                    # Check if the product already exists
-                    cursor.execute(
-                        "SELECT * FROM Products WHERE productID = ?", data['pid'])
-                    existing_product = cursor.fetchone()
+        if self.custindata == False:
+            rows = self.db.execute_read_query("Select MAX (customerID) from Customers")
+            for row in rows:
+                if row and row[0]:
+                    self.cid = row[0] + 1
+                else:
+                    self.cid = 1
+                self.db.execute_read_query("INSERT INTO Customers VALUES ({}, '{}', '{}', '{}')".format(self.cid,self.custinfo['fname'], self.custinfo['lname'], self.custinfo['phone']))  
+        self.db.execute_read_query("INSERT INTO Customer_Order VALUES ({}, {}, 1, '{}', '{}','Credit')".format(self.orderno, self.cid, order_date, order_time))
+        for data in self.data:
+            # Check if the product already exists
+            rows = self.db.execute_read_query("SELECT * FROM Products WHERE productID = '{}'".format(data['pid']))
+            if rows:
+                for row in rows:
+                    existing_product = row
+            if existing_product is not None:
+                # Product already exists, update quantity or price
+                new_quantity = int(existing_product[5]) - int(data['quantity'])
 
-                    if existing_product is not None:
-                        # Product already exists, update quantity or price
-                        new_quantity = int(existing_product[5]) - int(data['quantity'])
-
-                        cursor.execute(
-                            "UPDATE Products SET inventory = ? WHERE productID = ?",
-                            new_quantity, data['pid']
-                        )
-                        cursor.execute("Insert into Customer_Order_Details Values (?,?,?,?)",self.orderno,data['pid'],data['quantity'],data['price'])
-                cursor.commit()
-            # clear all fields
-            self.tableWidget.clearContents()
-            self.tableWidget.setRowCount(0)
-            self.lineEdit_6.clear()
-            self.lineEdit_7.clear()
-            
-            self.openwin()
-            MainWindow.close()
-
-        except pyodbc.Error as ex:
-            # Handle the exception and inform the user
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Database Error")
-            msg_box.setText("Error: {}".format(ex))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
-        finally:
-            # Close the connection in the finally block
-            if cnxn:
-                cnxn.close()
-                
-
+                self.db.execute_query("UPDATE Products SET inventory = {} WHERE productID = {}".format(new_quantity, data['pid']))
+                self.db.execute_query("Insert into Customer_Order_Details Values ({},{},{},{})".format(self.orderno,data['pid'],data['quantity'],data['price']))
+        # clear all fields
+        self.tableWidget.clearContents()
+        self.tableWidget.setRowCount(0)
+        self.lineEdit_6.clear()
+        self.lineEdit_7.clear()
+        self.openwin()
+        MainWindow.close()
+        
     def openwin(self):
         self.win = QtWidgets.QMainWindow()
         self.ui = payment()
