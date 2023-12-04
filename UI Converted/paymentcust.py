@@ -117,7 +117,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-            MainWindow.close()
         elif entered_amount < self.total:
             rows = self.db.execute_read_query("SELECT * FROM Credit_Customers WHERE customerID = '{}'".format(self.cid))
             if rows:
@@ -140,7 +139,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.db.execute_query("INSERT INTO Credit_Customers VALUES ('{}', '{}', '{}')".format(new_credit_customer_id,self.cid, (self.total - entered_amount)))
             order_date = datetime.now().date().strftime('%Y-%m-%d')
             order_time = datetime.now().time().strftime('%H:%M:%S')
-            self.db("SELECT MAX(transactionID) FROM Customer_Transactions")
+            rows = self.db.execute_read_query("SELECT MAX(transactionID) FROM Customer_Transactions")
             if rows :
                 for row in rows:
                     if row and row[0]:
@@ -158,7 +157,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-            MainWindow.close()
         else:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Payment Error")
