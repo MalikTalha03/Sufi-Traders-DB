@@ -22,6 +22,10 @@
         "checkinventory.ui",
         "updateemployee.ui",
         "empdetail.ui",
-        "Dashboard.ui"
+        "Dashboard.ui",
+        "Login.ui",
+        "Reports.ui",
+        "product.ui",
+        "topselling.ui"
     ]
 }
