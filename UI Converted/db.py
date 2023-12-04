@@ -1,5 +1,3 @@
-# database_manager.py
-
 import pyodbc
 from PyQt6 import QtWidgets
 
@@ -25,7 +23,6 @@ class DatabaseManager:
         self.cursor.execute(query)
         self.db.commit()
 
-    
     def execute_read_query(self, query):
         self.cursor.execute(query)
         result = self.cursor.fetchall()
@@ -33,5 +30,3 @@ class DatabaseManager:
     
     def close_connection(self):
         self.db.close()
-
-    
