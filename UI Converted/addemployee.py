@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from db import DatabaseManager
 import hashlib
 class Ui_MainWindow(object):
@@ -103,6 +102,31 @@ class Ui_MainWindow(object):
         self.actionoption.setText(_translate("MainWindow", "option"))
 
     def addemployee(self):
+        if self.lineEdit_6.text() == '':
+            msg = "Please enter a password"
+            self.displaymsg(msg)
+            return
+        elif self.lineEdit_2.text() == '':
+            msg = "Please enter a contact number"
+            self.displaymsg(msg)
+            return
+        elif self.lineEdit_3.text() == '':
+            msg = "Please enter a last name"
+            self.displaymsg(msg)
+            return
+        elif self.lineEdit_4.text() == '':
+            msg = "Please enter an address"
+            self.displaymsg(msg)
+            return
+        elif self.lineEdit_5.text() == '':
+            msg = "Please enter a salary"
+            self.displaymsg(msg)
+            return
+        elif self.lineEdit.text() == '':
+            msg = "Please enter a first name"
+            self.displaymsg(msg)
+            return
+        
         fname = self.lineEdit.text()
         lname = self.lineEdit_3.text()
         contact = self.lineEdit_2.text()
@@ -128,6 +152,15 @@ class Ui_MainWindow(object):
         msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
         result = msg_box.exec()
         MainWindow.close()
+
+    def displaymsg(self,msg):
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle("Error")
+        msg_box.setText('{}'.format(msg))
+        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
+        return
 
 if __name__ == "__main__":
     import sys
