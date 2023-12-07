@@ -39,7 +39,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "Add Category"))
         self.label.setText(_translate("Form", "Category ID"))
         self.pushButton.setText(_translate("Form", "ADD"))
         self.label_2.setText(_translate("Form", "Category Name"))
