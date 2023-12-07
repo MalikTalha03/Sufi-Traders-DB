@@ -81,7 +81,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Customer Orders"))
         self.tableWidget.setSortingEnabled(False)
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Order ID"))
@@ -115,6 +115,7 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[3])))
                 self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[4])))
                 self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[5])))
+                
                 rows3 = self.db.execute_read_query("SELECT SUM(quantity * salePrice) FROM Customer_Order_Details where orderID={}".format(row_data[0]))
                 for row3 in rows3:
                     total = row3[0]
@@ -125,6 +126,13 @@ class Ui_MainWindow(object):
                         self.lineEdit_9.setText(str(row4[2]))
                 else:
                     self.lineEdit_9.setText('0')
+                for col in range(self.tableWidget.columnCount()):
+                    item = self.tableWidget.item(row_number, col)
+                    if item:
+                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+                openbtn = QtWidgets.QPushButton('Open', self.tableWidget)
+                openbtn.clicked.connect(lambda _, row=row_number: self.opendetail(row))
+                self.tableWidget.setCellWidget(row_number, 5, openbtn)
         else:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Error")
@@ -151,6 +159,15 @@ class Ui_MainWindow(object):
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
+
+    def opendetail(self, row):
+        from findcustorder import Ui_MainWindow
+        self.window = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.window)
+        self.ui.setvalues(self.tableWidget.item(row, 0).text())
+        self.window.show()
+        
 
 if __name__ == "__main__":
     import sys
