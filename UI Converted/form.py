@@ -121,7 +121,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Add Order"))
         self.label_7.setText(_translate("MainWindow", "Order ID"))
         self.label_5.setText(_translate("MainWindow", "Product Name"))
         self.label_8.setText(_translate("MainWindow", "Total"))
@@ -157,12 +157,35 @@ class Ui_MainWindow(object):
         else:
             self.order_id = 1
         
-
     def move(self):
         self.lineEdit_5.setFocus()
 
     def addNewRow(self):
-    # Get data from line edits
+        if self.lineEdit_4.text() == "":  # If product name is not entered
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Please enter product name")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            return
+        elif self.lineEdit_5.text() == "":  # If quantity is not entered
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Please enter quantity")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            return
+        elif not self.lineEdit_5.text().isdigit():  # If quantity is not a number
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Please enter valid quantity")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            return
+        
         product_name = self.lineEdit_4.text()
         quantity = self.lineEdit_5.text()
         rows = self.db.execute_read_query("SELECT * FROM Products WHERE productName = '{}'".format(product_name))
@@ -188,11 +211,7 @@ class Ui_MainWindow(object):
                                     if detail['pid'] == row[0]:
                                         detail['quantity'] = new_quantity
                                         detail['total_price'] = total_price
-                                for col in range(self.tableWidget.columnCount()):
-                                    item = self.tableWidget.item(row_num, col)
-                                    if item:
-                                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-
+                                
                                 # Clear the line edits
                                 self.lineEdit_5.clear()
                                 self.lineEdit_4.clear()
@@ -215,6 +234,7 @@ class Ui_MainWindow(object):
 
 
     def addNewProductRow(self, row, quantity):
+
         row_position = self.tableWidget.rowCount()
         self.tableWidget.insertRow(row_position)
 
@@ -222,14 +242,14 @@ class Ui_MainWindow(object):
         self.tableWidget.setItem(row_position, 1, QtWidgets.QTableWidgetItem(str(row[1])))
         self.tableWidget.setItem(row_position, 3, QtWidgets.QTableWidgetItem(quantity))
         self.tableWidget.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(row[2])))
-        for col in range(self.tableWidget.columnCount()):
-            item = self.tableWidget.item(row_position, col)
-            if item:
-                item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
         product_price = row[2]  # price will be fetched from db
         total_price = product_price * int(quantity)
         self.tableWidget.setItem(row_position, 4, QtWidgets.QTableWidgetItem(str(total_price)))
+        for col in range(self.tableWidget.columnCount()):
+            item = self.tableWidget.item(row_position, col)
+            if item:
+                item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
         delete_button = QtWidgets.QPushButton('Delete', self.tableWidget)
         delete_button.clicked.connect(lambda _, row=row_position: self.deleteRow(row))
@@ -276,7 +296,8 @@ class Ui_MainWindow(object):
         msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
 
         result = msg_box.exec()
-    def handle_lineEdit3_enter(self):        
+    def handle_lineEdit3_enter(self):
+
         phone = self.lineEdit_3.text()
         rows = self.db.execute_read_query("SELECT * FROM Customers WHERE customerContact = '{}'".format(phone))
         if rows:
