@@ -61,7 +61,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "Form"))
+        Form.setWindowTitle(_translate("Form", "Payment"))
         self.label_8.setText(_translate("Form", "Total"))
         self.label_7.setText(_translate("Form", "Order ID"))
         self.label.setText(_translate("Form", "Payment Method"))
