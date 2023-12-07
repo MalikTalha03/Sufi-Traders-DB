@@ -20,6 +20,10 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menuEmployee.setObjectName("menuEmployee")
         self.menuEmployee.setTitle("Employee")
 
+        self.menuReports = QtWidgets.QMenu(self)
+        self.menuReports.setObjectName("menuReports")
+        self.menuReports.setTitle("Reports")
+
         self.setupActions()
 
     def setupActions(self):
@@ -117,6 +121,22 @@ class MenuBar(QtWidgets.QMenuBar):
         self.actionDelete.setText("Delete")
         self.actionDelete.triggered.connect(self.delemp)
 
+        # Reports menu actions
+        self.actionTopSelling = QtGui.QAction(self)
+        self.actionTopSelling.setObjectName("actionTopSelling")
+        self.actionTopSelling.setText("Top Selling")
+        self.actionTopSelling.triggered.connect(self.topSelling)
+
+        self.actionSales = QtGui.QAction(self)
+        self.actionSales.setObjectName("actionSales")
+        self.actionSales.setText("Sales")
+        self.actionSales.triggered.connect(self.sales)
+
+        self.actionProductSales = QtGui.QAction(self)
+        self.actionProductSales.setObjectName("actionProductSales")
+        self.actionProductSales.setText("Product Sales")
+        self.actionProductSales.triggered.connect(self.prodsale)
+
         self.menuCustomer.addAction(self.actionNew_Order)
         self.menuCustomer.addAction(self.actionGet_Paid)
         self.menuCustomer.addAction(self.actionFind_Order)
@@ -138,10 +158,15 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menuEmployee.addAction(self.actionUpdate_Details)
         self.menuEmployee.addAction(self.actionDelete)
 
+        self.menuReports.addAction(self.actionTopSelling)
+        self.menuReports.addAction(self.actionSales)
+        self.menuReports.addAction(self.actionProductSales)
+
         self.addMenu(self.menuCustomer)
         self.addMenu(self.menuSupplier)
         self.addMenu(self.menuProduct)
         self.addMenu(self.menuEmployee)
+        self.addMenu(self.menuReports)
 
     def new_order(self):
         from form import Ui_MainWindow
@@ -243,6 +268,24 @@ class MenuBar(QtWidgets.QMenuBar):
         pass
     def refundorder(self):
         from returns import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def topSelling(self):
+        from topselling import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def sales(self):
+        from Reports import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
+    def prodsale(self):
+        from productreport import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
