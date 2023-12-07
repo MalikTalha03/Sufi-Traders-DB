@@ -100,7 +100,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Customer Order"))
         self.label_4.setText(_translate("MainWindow", "Customer Name"))
         self.label_9.setText(_translate("MainWindow", "Customer ID"))
         self.label_3.setText(_translate("MainWindow", "Order No"))
@@ -156,6 +156,10 @@ class Ui_MainWindow(object):
                                 self.tableWidget.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(prodprice)))
                                 self.tableWidget.setItem(row_position, 3, QtWidgets.QTableWidgetItem(str(quantity)))
                                 self.tableWidget.setItem(row_position, 4, QtWidgets.QTableWidgetItem(str(prodtot)))
+                                for col in range(self.tableWidget.columnCount()):
+                                    item = self.tableWidget.item(row_position, col)
+                                    if item:
+                                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
                     self.lineEdit_4.setText(str(total))
                     rows = self.db.execute_read_query("SELECT * FROM Customer_Transactions WHERE orderID = '{}' AND transactionType IN ('Cash', 'Bank Transfer')".format(id))
                     if rows:
@@ -182,6 +186,11 @@ class Ui_MainWindow(object):
         self.lineEdit_3.clear()
         self.lineEdit_4.clear()
         self.tableWidget.setRowCount(0)
+
+    def setvalues(self,orderno):
+        self.lineEdit.setText(str(orderno))
+        self.findorder()
+        self.lineEdit.setEnabled(False)
 
 
 if __name__ == "__main__":
