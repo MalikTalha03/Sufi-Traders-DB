@@ -82,7 +82,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Supplier Order Details"))
         item = self.tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Product ID"))
         item = self.tableWidget.horizontalHeaderItem(1)
@@ -99,6 +99,11 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "Order No"))
         self.label_2.setText(_translate("MainWindow", "Total"))
         
+    def setvalues(self,order):
+        self.orderno = order
+        self.lineEdit.setText(str(self.orderno))
+        self.lineEdit.setEnabled(False)
+        self.findorder()
     def findorder(self):
         total = 0
         rows = self.db.execute_read_query("Select * From Supplier_Order Where orderID='{}'".format(self.lineEdit.text()))
@@ -148,18 +153,16 @@ class Ui_MainWindow(object):
         self.lineEdit.setEnabled(False)
 
     def populate_table(self):
-    # Assuming that self.data is a list of dictionaries
         for row_num, row_data in enumerate(self.data):
-            # Add a new row to the table widget
             self.tableWidget.insertRow(row_num)
-
-            # Define the keys you want to access
             keys_to_access = ['pid', 'cname', 'pname', 'purprice', 'inv', 'total_price']
-
-            # Loop through the keys and set the items using the keys
             for col_num, col_key in enumerate(keys_to_access):
                 item = QtWidgets.QTableWidgetItem(str(row_data.get(col_key, '')))
                 self.tableWidget.setItem(row_num, col_num, item)
+            for col in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(row_num, col)
+                if item:
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
     def addtodb(self):
         rows = self.db.execute_query("Insert into Supplier_Order Values ('{}','{}','{}','{}','{}')".format(self.id,datetime.today().strftime('%Y-%m-%d'),self.suppid,self.total,'Not Paid'))
