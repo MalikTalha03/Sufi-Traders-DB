@@ -85,7 +85,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Supplier Orders"))
         self.label_10.setText(_translate("MainWindow", "Total Balance"))
         self.label_3.setText(_translate("MainWindow", "Supplier ID"))
         self.tableWidget.setSortingEnabled(False)
@@ -125,6 +125,13 @@ class Ui_MainWindow(object):
                             self.tableWidget.setItem(row_pos, 3, QtWidgets.QTableWidgetItem("Unpaid"))
                         else:
                             self.tableWidget.setItem(row_pos, 3, QtWidgets.QTableWidgetItem("Paid"))
+                        for col in range(self.tableWidget.columnCount()):
+                            item = self.tableWidget.item(row_pos, col)
+                            if item:
+                                item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+                        opnbtn = QtWidgets.QPushButton('Open', self.tableWidget)
+                        opnbtn.clicked.connect(lambda _, row=row_pos: self.open(row))
+                        self.tableWidget.setCellWidget(row_pos, 4, opnbtn)
         else:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Error")
@@ -138,10 +145,20 @@ class Ui_MainWindow(object):
         for row in total:
             total = row[0]
         paid = self.db.execute_read_query("Select sum(totalAmount) from Supplier_Transactions where orderID='{}'".format(order_id))
-        for row in paid:
-            paid = row[0]
+        if paid and paid[0][0] != None:
+            for row in paid:
+                paid = row[0]
+        else:
+            paid = 0
         return total - paid
-    
+    def open(self, row):
+        from supporderdetail import Ui_MainWindow
+        self.window = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.window)
+        self.ui.setvalues(self.tableWidget.item(row, 0).text())
+        self.window.show()
+
     def findorderbyname(self):
         name = self.lineEdit_2.text()
         rows = self.db.execute_read_query("Select * from Supplier where supplierName='{}'".format(name))
