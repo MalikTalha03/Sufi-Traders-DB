@@ -77,7 +77,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Details"))
         self.pushButton.setText(_translate("MainWindow", "Proceed"))
         self.label_8.setText(_translate("MainWindow", "Total"))
         self.label_7.setText(_translate("MainWindow", "Order ID"))
@@ -103,6 +103,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             for col_num, col_key in enumerate(keys_to_access):
                 item = QtWidgets.QTableWidgetItem(str(row_data.get(col_key, '')))
                 self.tableWidget.setItem(row_num, col_num, item)
+            for col in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(row_num, col)
+                if item:
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
 
     def addtodb(self):
