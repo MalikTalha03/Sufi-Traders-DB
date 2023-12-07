@@ -96,7 +96,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Product Sales Report"))
         self.label.setText(_translate("MainWindow", "Product Sales Report "))
         self.radioButton.setText(_translate("MainWindow", "Monthly"))
         self.radioButton_2.setText(_translate("MainWindow", "Daily"))
