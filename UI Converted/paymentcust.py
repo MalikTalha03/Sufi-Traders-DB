@@ -73,7 +73,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Payment"))
         self.label.setText(_translate("MainWindow", "Payment Method"))
         self.label_9.setText(_translate("MainWindow", "Amount"))
         self.pushButton.setText(_translate("MainWindow", "Complete Payment"))
