@@ -49,6 +49,11 @@ class MenuBar(QtWidgets.QMenuBar):
         self.actionGet_All_Orders.setText("Get All Orders")
         self.actionGet_All_Orders.triggered.connect(self.allcustorders)
 
+        self.actionRefundOrder = QtGui.QAction(self)
+        self.actionRefundOrder.setObjectName("actionRefundOrder")
+        self.actionRefundOrder.setText("Refund Order")
+        self.actionRefundOrder.triggered.connect(self.refundorder)
+
         # Supplier menu actions
         self.actionNew_Order_2 = QtGui.QAction(self)
         self.actionNew_Order_2.setObjectName("actionNew_Order_2")
@@ -236,6 +241,12 @@ class MenuBar(QtWidgets.QMenuBar):
         self.win.show()
     def delemp(self):
         pass
+    def refundorder(self):
+        from returns import Ui_Form
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_Form()
+        self.ui.setupUi(self.win)
+        self.win.show()
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
