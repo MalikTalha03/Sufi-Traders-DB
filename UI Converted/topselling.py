@@ -54,7 +54,6 @@ class Ui_MainWindow(object):
         self.pushButton.clicked.connect(self.search)
         self.pushButton_2.clicked.connect(self.clear)
         
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
