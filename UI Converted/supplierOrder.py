@@ -120,7 +120,6 @@ class Ui_MainWindow(object):
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-       
         
 
         self.lineEdit.returnPressed.connect(self.findsupplier)
@@ -139,7 +138,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Supplier Order"))
         self.label.setText(_translate("MainWindow", "Supplier ID"))
         self.label_2.setText(_translate("MainWindow", "Supplier Name"))
         self.label_3.setText(_translate("MainWindow", "Product ID"))
@@ -255,6 +254,10 @@ class Ui_MainWindow(object):
                 self.tableWidget.setItem(row_position, 3, QtWidgets.QTableWidgetItem(str(purprice)))
                 self.tableWidget.setItem(row_position, 4, QtWidgets.QTableWidgetItem(str(inv)))
                 self.tableWidget.setItem(row_position, 5, QtWidgets.QTableWidgetItem(str(total_price)))
+                for col in range(self.tableWidget.columnCount()):
+                    item = self.tableWidget.item(row_position, col)
+                    if item:
+                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
                 self.total += total_price
                 self.lineEdit_8.setText(str(self.total))
                 row_detail = {
