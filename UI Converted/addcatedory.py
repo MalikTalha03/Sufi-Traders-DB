@@ -53,16 +53,25 @@ class Ui_Form(object):
                 self.id = 1
 
     def addcategory(self):
-        cid = self.lineEdit.text()
-        cname = self.lineEdit_2.text()
-        rows = self.db.execute_query("Insert into Categories values ({},'{}')".format(cid,cname))
-        msg_box = QtWidgets.QMessageBox()
-        msg_box.setWindowTitle("Success")
-        msg_box.setText("Category added successfully .")
-        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-        result = msg_box.exec()
-        Form.close()
+        if self.lineEdit_2.text() == '':
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Error")
+            msg_box.setText("Please enter a category name.")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            return
+        else:
+            cid = self.lineEdit.text()
+            cname = self.lineEdit_2.text()
+            rows = self.db.execute_query("Insert into Categories values ({},'{}')".format(cid,cname))
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setWindowTitle("Success")
+            msg_box.setText("Category added successfully .")
+            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+            result = msg_box.exec()
+            Form.close()
 
 if __name__ == "__main__":
     import sys
