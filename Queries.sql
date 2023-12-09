@@ -19,7 +19,7 @@ customerContact varchar(11) Not Null
 
 Create Table Credit_Customers(
 creditCustomerID int Primary Key,
-customerID int Foreign Key References Customers(customerID) Not Null,
+customerID int Foreign Key References Customers(customerID) Not Null UNIQUE,
 totalCredit decimal(10, 2) Not Null
 );
 
@@ -88,7 +88,7 @@ Primary Key (orderID, productID)
 Create Table Customer_Transactions(
 transactionID int Primary Key,
 transactionType varchar(15) Not Null
-CONSTRAINT chk_transaction CHECK (transactionType IN ('Cash', 'Credit', 'Bank Transfer')),
+CONSTRAINT chk_transaction CHECK (transactionType IN ('Cash', 'Credit', 'Bank Transfer','Refund')),
 totalAmount decimal(10, 2) Not Null,
 orderID int Foreign Key References Customer_Order(orderID) Not Null,
 transactionDate Date Not Null,
