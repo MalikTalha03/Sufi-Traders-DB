@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from topbar import MenuBar
 from db import DatabaseManager
 class Ui_MainWindow(object):
@@ -68,14 +67,12 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         menubar = MenuBar(MainWindow)
         MainWindow.setMenuBar(menubar)
-        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.lineEdit.setFocus()
         self.lineEdit.returnPressed.connect(self.findordersbyid)
         self.lineEdit_2.returnPressed.connect(self.findordersbyname)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -100,8 +97,6 @@ class Ui_MainWindow(object):
 
     def findordersbyid(self):
         customer_id = self.lineEdit.text()
-
-        # Use JOIN to retrieve order details with customer information
         query = """
             SELECT Customer_Order.orderID,
                 Customer_Order.orderDate,
@@ -120,40 +115,28 @@ class Ui_MainWindow(object):
             GROUP BY Customer_Order.orderID, Customer_Order.orderDate,Customer_Order.orderTime, Customer_Order.paymentStatus,
                     Customers.custFName, Customers.custLName, Customers.customerContact, Credit_Customers.totalCredit
         """.format(customer_id)
-
         rows = self.db.execute_read_query(query)
-
         if rows:
             self.tableWidget.setRowCount(0)
             customer_info = rows[0]
-
             self.lineEdit_2.setText('{}'.format(customer_info[4] + " " + customer_info[5]))
             self.lineEdit_8.setText(str(customer_info[6]))
             self.lineEdit_9.setText(str(customer_info[7]))
-
             for row_data in rows:
                 row_number = self.tableWidget.rowCount()
                 self.tableWidget.insertRow(row_number)
-
-                # Insert order data into the table
                 self.tableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(str(row_data[0])))
                 self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[1])))
                 self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[3])))
                 self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[2])))
                 self.tableWidget.setItem(row_number, 3, QtWidgets.QTableWidgetItem(str(row_data[8])))
-
-                # Set cell as non-editable
                 for col in range(self.tableWidget.columnCount()):
                     item = self.tableWidget.item(row_number, col)
                     if item:
                         item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-
-                # Add a button to open details
                 openbtn = QtWidgets.QPushButton('Open', self.tableWidget)
                 openbtn.clicked.connect(lambda _, row=row_number: self.opendetail(row))
                 self.tableWidget.setCellWidget(row_number, 5, openbtn)
-
-
         else:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Error")
@@ -166,7 +149,6 @@ class Ui_MainWindow(object):
         name = self.lineEdit_2.text()
         firstName = name.split()[0]
         lastName = name.split()[1]
-        
         row = self.db.execute_read_query("SELECT * FROM Customers WHERE custFName = '{}' AND custLName = '{}'".format(firstName, lastName))
         if row:
             for row in row:
@@ -189,7 +171,6 @@ class Ui_MainWindow(object):
         self.ui.setvalues(self.tableWidget.item(row, 0).text())
         self.window.show()
         
-
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
