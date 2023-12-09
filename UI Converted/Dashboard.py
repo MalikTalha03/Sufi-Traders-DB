@@ -2,11 +2,10 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 from topbar import MenuBar
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
-import calendar
 from collections import defaultdict
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from db import DatabaseManager
-
+import calendar
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -41,7 +40,6 @@ class Ui_MainWindow(object):
         self.label_2.setObjectName("label_2")
         menubar = MenuBar(MainWindow)
         MainWindow.setMenuBar(menubar)
-        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
@@ -58,42 +56,38 @@ class Ui_MainWindow(object):
         self.label_2.setText(_translate("MainWindow", "Monthly Sales"))
     
     def plot(self):
-        rows = self.db.execute_read_query("SELECT * FROM Customer_Order WHERE MONTH(orderDate) = MONTH(GETDATE())")
-        current_date = datetime.now()
-        last_day_of_month = (current_date.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-        total_sales_per_day = {day: 0 for day in range(1, last_day_of_month.day + 1)}
-        if rows:
-            for row in rows:
-                rows2 = self.db.execute_read_query("SELECT * FROM Customer_Order_Details WHERE orderID = '{}'".format(row[0]))
-                if rows2:
-                    for row2 in rows2:
-                        order_date = datetime.strptime(row[3], '%Y-%m-%d')
-                        total_sales_per_day[order_date.day] += float(row2[2]) * float(row2[3])
+        total_sales_per_day = {day: 0 for day in range(1, calendar.monthrange(datetime.now().year, datetime.now().month)[1] + 1)}
+        query = """
+            SELECT DAY(Customer_Order.orderDate) AS orderDay, 
+                SUM(Customer_Order_Details.quantity * Customer_Order_Details.salePrice) AS totalSales
+            FROM Customer_Order
+            LEFT JOIN Customer_Order_Details ON Customer_Order.orderID = Customer_Order_Details.orderID
+            WHERE MONTH(Customer_Order.orderDate) = MONTH(GETDATE())
+            GROUP BY DAY(Customer_Order.orderDate)
+        """
+        rows = self.db.execute_read_query(query)
+        for row in rows:
+            total_sales_per_day[row[0]] = float(row[1])
         fig, ax = plt.subplots()
         canvas = FigureCanvas(fig)
         canvas.setGeometry(0, 0, 751, 421)
         layout = QtWidgets.QVBoxLayout(self.widget)
         layout.addWidget(canvas)
-
-        ax.plot(total_sales_per_day.keys(), total_sales_per_day.values(), color='blue')
+        ax.plot(total_sales_per_day.keys(), total_sales_per_day.values(), color ='blue' , marker='o', linestyle='solid')
         ax.set_xlabel('Day of the Month')
         ax.set_ylabel('Total Sales')
         ax.set_title('Total Sales for Each Day in Current Month')
         canvas.draw()
 
     def todaysales(self):
-        
-        total = 0
-        rows = self.db.execute_read_query("SELECT * FROM Customer_Order WHERE orderDate = '{}'".format(datetime.today().strftime('%Y-%m-%d')))
-        if rows:
-            for row in rows:
-                rows2 = self.db.execute_read_query("SELECT * FROM Customer_Order_Details WHERE orderID = '{}'".format(row[0]))
-                if rows2:
-                    for row2 in rows2:
-                        total += (row2[2] * row2[3])
-            self.lineEdit.setText(str(total))
-        else:
-            self.lineEdit.setText(str(0))
+        query = """
+            SELECT COALESCE(SUM(Customer_Order_Details.quantity * Customer_Order_Details.salePrice), 0) AS totalSales
+            FROM Customer_Order
+            LEFT JOIN Customer_Order_Details ON Customer_Order.orderID = Customer_Order_Details.orderID
+            WHERE Customer_Order.orderDate = '{}'
+        """.format(datetime.today().strftime('%Y-%m-%d'))
+        total = self.db.execute_read_query(query)[0][0]
+        self.lineEdit.setText(str(total))
 
 if __name__ == "__main__":
     import sys
