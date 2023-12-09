@@ -1,10 +1,10 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from topbar import MenuBar
 from db import DatabaseManager
 class Ui_MainWindow(object):
     def __init__(self):
         self.db = DatabaseManager()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -71,7 +71,6 @@ class Ui_MainWindow(object):
         self.lineEdit_10.setText("")
         self.lineEdit_10.setObjectName("lineEdit_10")
         MainWindow.setCentralWidget(self.centralwidget)
-        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
@@ -79,7 +78,6 @@ class Ui_MainWindow(object):
         self.lineEdit_2.returnPressed.connect(self.findorderbyname)
         menubar = MenuBar(MainWindow)
         MainWindow.setMenuBar(menubar)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -102,55 +100,59 @@ class Ui_MainWindow(object):
         self.label_11.setText(_translate("MainWindow", "Address"))
 
     def findordersbyid(self):
-        id = self.lineEdit.text()
-        rembal = 0
-        rows = self.db.execute_read_query("Select * from Supplier where supplierID='{}'".format(id))
+        supplier_id = self.lineEdit.text()
+        rem_bal = 0
+
+        # Use JOIN to retrieve supplier information along with order details
+        query = """
+            SELECT Supplier.supplierName, Supplier.supplierAddress, Supplier.supplierContact,
+                Supplier_Order.orderID, Supplier_Order.orderDate, Supplier_Order.totalAmount,
+                SUM(Supplier_Transactions.totalAmount) AS total_paid
+            FROM Supplier
+            LEFT JOIN Supplier_Order ON Supplier.supplierID = Supplier_Order.supplierID
+            LEFT JOIN Supplier_Transactions ON Supplier_Order.orderID = Supplier_Transactions.orderID
+            WHERE Supplier.supplierID = '{}'
+            GROUP BY Supplier.supplierID, Supplier_Order.orderID, Supplier.supplierName, Supplier.supplierAddress,
+			Supplier.supplierContact,Supplier_Order.orderDate,Supplier_Order.totalAmount
+        """.format(supplier_id)
+
+        rows = self.db.execute_read_query(query)
+        self.tableWidget.setRowCount(0)
         if rows:
             for row in rows:
-                self.lineEdit_2.setText(str(row[1]))
-                self.lineEdit_8.setText(str(row[2]))
-                self.lineEdit_10.setText(str(row[3]))
-                self.tableWidget.setRowCount(0)
-                rows2 = self.db.execute_read_query("Select * from Supplier_Order where supplierID='{}'".format(id))
-                if rows2:
-                    for row_pos,row2 in enumerate(rows2):
-                        self.tableWidget.insertRow(row_pos)
-                        self.tableWidget.setItem(row_pos, 0, QtWidgets.QTableWidgetItem(str(row2[0])))
-                        self.tableWidget.setItem(row_pos, 1, QtWidgets.QTableWidgetItem(str(row2[1])))
-                        self.tableWidget.setItem(row_pos, 2, QtWidgets.QTableWidgetItem(str(row2[3])))
-                        remaining_amount = self.calculateRemainingAmount(row2[0])
-                        rembal += remaining_amount
-                        self.lineEdit_9.setText(str(rembal))
-                        if remaining_amount > 0:
-                            self.tableWidget.setItem(row_pos, 3, QtWidgets.QTableWidgetItem("Unpaid"))
-                        else:
-                            self.tableWidget.setItem(row_pos, 3, QtWidgets.QTableWidgetItem("Paid"))
-                        for col in range(self.tableWidget.columnCount()):
-                            item = self.tableWidget.item(row_pos, col)
-                            if item:
-                                item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-                        opnbtn = QtWidgets.QPushButton('Open', self.tableWidget)
-                        opnbtn.clicked.connect(lambda _, row=row_pos: self.open(row))
-                        self.tableWidget.setCellWidget(row_pos, 4, opnbtn)
+                if row[6] is None:
+                    row[6] = 0
+                self.lineEdit_2.setText(str(row[0]))
+                self.lineEdit_8.setText(str(row[1]))
+                self.lineEdit_10.setText(str(row[2]))
+                order_id = row[3]
+                row_pos = self.tableWidget.rowCount()
+                self.tableWidget.insertRow(row_pos)
+                self.tableWidget.setItem(row_pos, 0, QtWidgets.QTableWidgetItem(str(order_id)))
+                self.tableWidget.setItem(row_pos, 1, QtWidgets.QTableWidgetItem(str(row[4])))
+                self.tableWidget.setItem(row_pos, 2, QtWidgets.QTableWidgetItem(str(row[5])))
+                remaining_amount = row[5] - row[6]
+                rem_bal += remaining_amount
+                self.lineEdit_9.setText(str(rem_bal))
+                if remaining_amount > 0:
+                    self.tableWidget.setItem(row_pos, 3, QtWidgets.QTableWidgetItem("Unpaid"))
+                else:
+                    self.tableWidget.setItem(row_pos, 3, QtWidgets.QTableWidgetItem("Paid"))
+                for col in range(self.tableWidget.columnCount()):
+                    item = self.tableWidget.item(row_pos, col)
+                    if item:
+                        item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+                opn_btn = QtWidgets.QPushButton('Open', self.tableWidget)
+                opn_btn.clicked.connect(lambda _, row=row_pos: self.open(row))
+                self.tableWidget.setCellWidget(row_pos, 4, opn_btn)
         else:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Error")
-            msg_box.setText("No record found against this ID: {}".format(id))
+            msg_box.setText("No record found against this ID: {}".format(supplier_id))
             msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
             result = msg_box.exec()
-        
-    def calculateRemainingAmount(self, order_id):
-        total = self.db.execute_read_query("Select totalAmount from Supplier_Order where orderID='{}'".format(order_id))
-        for row in total:
-            total = row[0]
-        paid = self.db.execute_read_query("Select sum(totalAmount) from Supplier_Transactions where orderID='{}'".format(order_id))
-        if paid and paid[0][0] != None:
-            for row in paid:
-                paid = row[0]
-        else:
-            paid = 0
-        return total - paid
+
     def open(self, row):
         from supporderdetail import Ui_MainWindow
         self.window = QtWidgets.QMainWindow()
