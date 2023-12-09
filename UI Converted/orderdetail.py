@@ -1,10 +1,8 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
 from topbar import MenuBar
 from db import DatabaseManager
-
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
@@ -69,9 +67,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        
         self.pushButton.clicked.connect(lambda: self.addtodb())
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         
@@ -93,7 +89,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         item = self.tableWidget.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Total"))
         
-
     def populate_table(self):
         self.lineEdit_6.setText('{}'.format(self.orderno))
         self.lineEdit_7.setText('{}'.format(self.total))
@@ -108,7 +103,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 if item:
                     item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
 
-
     def addtodb(self):
         order_date = datetime.now().date().strftime('%Y-%m-%d')
         order_time = datetime.now().time().strftime('%H:%M:%S')
@@ -122,31 +116,27 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.db.execute_query("INSERT INTO Customers VALUES ({}, '{}', '{}', '{}')".format(self.cid,self.custinfo['fname'], self.custinfo['lname'], self.custinfo['phone']))  
         self.db.execute_query("INSERT INTO Customer_Order VALUES ('{}', '{}', 1, '{}', '{}','Credit')".format(self.orderno, self.cid, order_date, order_time))
         for data in self.data:
-            # Check if the product already exists
             rows = self.db.execute_read_query("SELECT * FROM Products WHERE productID = '{}'".format(data['pid']))
             if rows:
                 for row in rows:
                     existing_product = row
             if existing_product is not None:
-                # Product already exists, update quantity or price
                 new_quantity = int(existing_product[5]) - int(data['quantity'])
-
                 self.db.execute_query("UPDATE Products SET inventory = {} WHERE productID = {}".format(new_quantity, data['pid']))
                 self.db.execute_query("Insert into Customer_Order_Details Values ({},{},{},{})".format(self.orderno,data['pid'],data['quantity'],data['price']))
-        # clear all fields
         self.tableWidget.clearContents()
         self.tableWidget.setRowCount(0)
         self.lineEdit_6.clear()
         self.lineEdit_7.clear()
         self.openwin()
-        self.close()        
+        self.close() 
+
     def openwin(self):
         self.win = QtWidgets.QMainWindow()
         self.ui = payment()
         self.ui.setupUi(self.win)
         self.ui.setValues(self.orderno,self.total,self.cid)
         self.win.show()
-        
 
     def setValues(self,data,order,custid,total,custinfo,custindata):
         self.total = total
@@ -156,7 +146,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.custinfo = custinfo
         self.custindata = custindata
         self.populate_table()
-
 
 if __name__ == "__main__":
     import sys
