@@ -175,7 +175,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         if credit == 'Credit':
             self.db.execute_query("UPDATE Customer_Order_Details SET quantity = '{}' WHERE orderID = '{}' AND productID = '{}'".format( (self.data['quantity'] - int(row['quantity'])), self.orderno, row['pid']))
             self.db.execute_query("UPDATE Products SET inventory = inventory + '{}' WHERE productID = '{}'".format(row['quantity'], row['pid']))
-            
+            cred = self.db.execute_read_query("SELECT totalCredit FROM Credit_Customers WHERE customerID = (SELECT customerID FROM Customer_Order WHERE orderID = '{}')".format(self.orderno))[0][0]
+            if cred == None:
+                cred = 0
+            else:
+                cred = float(cred)
+            newcred = cred - self.total
+            self.db.execute_query("UPDATE Credit_Customers SET totalCredit = '{}' WHERE customerID = (SELECT customerID FROM Customer_Order WHERE orderID = '{}')".format(newcred, self.orderno))
+
+
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Success")
             msg.setText("Return Completed. No refund Issued.")
@@ -195,6 +203,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.db.execute_query("UPDATE Products SET inventory = inventory + '{}' WHERE productID = '{}'".format(row['quantity'], row['pid']))
                 amounttorefund = totalpaid - self.total
                 self.db.execute_query("Insert into Customer_Transactions (transactionID, transactionType, transactionDate, totalAmount, orderID, transactionTime ) values ('{}', '{}', '{}', '{}', '{}', '{}')".format(maxtid, 'Refund', datetime.now().strftime("%Y-%m-%d"), amounttorefund, self.orderno, datetime.now().strftime("%H:%M:%S")))
+                
+                
                 msg = QtWidgets.QMessageBox()
                 msg.setWindowTitle("Success")
                 msg.setText("Return Completed. Refund of Rs. {} has been initiated".format(amounttorefund)) 
@@ -208,6 +218,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.db.execute_query("UPDATE Products SET inventory = inventory + '{}' WHERE productID = '{}'".format(row['quantity'], row['pid']))
                 amounttorefund =  totalpaid
                 self.db.execute_query("Insert into Customer_Transactions (transactionID, transactionType, transactionDate, totalAmount, orderID, transactionTime ) values ('{}', '{}', '{}', '{}', '{}', '{}')".format(maxtid, 'Refund', datetime.now().strftime("%Y-%m-%d"), amounttorefund, self.orderno, datetime.now().strftime("%H:%M:%S")))
+                cred = self.db.execute_read_query("SELECT totalCredit FROM Credit_Customers WHERE customerID = (SELECT customerID FROM Customer_Order WHERE orderID = '{}')".format(self.orderno))[0][0]
+                if cred == None:
+                    cred = 0
+                else:
+                    cred = float(cred)
+                newcred = cred - (self.total - totalpaid)
+                self.db.execute_query("UPDATE Credit_Customers SET totalCredit = '{}' WHERE customerID = (SELECT customerID FROM Customer_Order WHERE orderID = '{}')".format(newcred, self.orderno))
                 msg = QtWidgets.QMessageBox()
                 msg.setWindowTitle("Success")
                 msg.setText("Return Completed. Refund of Rs. {} has been initiated".format(amounttorefund))
