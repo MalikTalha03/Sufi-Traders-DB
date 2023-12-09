@@ -99,40 +99,61 @@ class Ui_MainWindow(object):
         self.label_10.setText(_translate("MainWindow", "Remaining Credit"))
 
     def findordersbyid(self):
-        id = self.lineEdit.text()
-        id = self.lineEdit.text()
-        rows = self.db.execute_read_query("SELECT * FROM Customer_Order WHERE customerID = {}".format(id))
+        customer_id = self.lineEdit.text()
+
+        # Use JOIN to retrieve order details with customer information
+        query = """
+            SELECT Customer_Order.orderID,
+                Customer_Order.orderDate,
+                Customer_Order.paymentStatus,
+				Customer_Order.orderTime,
+                Customers.custFName,
+                Customers.custLName,
+                Customers.customerContact,
+                Credit_Customers.totalCredit,
+                SUM(Customer_Order_Details.quantity * Customer_Order_Details.salePrice) AS total
+            FROM Customer_Order
+            JOIN Customers ON Customer_Order.customerID = Customers.customerID
+            JOIN Credit_Customers ON Customer_Order.customerID = Credit_Customers.customerID
+            LEFT JOIN Customer_Order_Details ON Customer_Order.orderID = Customer_Order_Details.orderID
+            WHERE Customer_Order.customerID = {}
+            GROUP BY Customer_Order.orderID, Customer_Order.orderDate,Customer_Order.orderTime, Customer_Order.paymentStatus,
+                    Customers.custFName, Customers.custLName, Customers.customerContact, Credit_Customers.totalCredit
+        """.format(customer_id)
+
+        rows = self.db.execute_read_query(query)
+
         if rows:
             self.tableWidget.setRowCount(0)
-            rows2 = self.db.execute_read_query("Select * from Customers where customerID={}".format(id))
-            if rows2:
-                for row2 in rows2:
-                    self.lineEdit_2.setText('{}'.format(row2[1] +" "+ row2[2]))
-                    self.lineEdit_8.setText(str(row2[3]))
-            for row_number , row_data in enumerate(rows):
+            customer_info = rows[0]
+
+            self.lineEdit_2.setText('{}'.format(customer_info[4] + " " + customer_info[5]))
+            self.lineEdit_8.setText(str(customer_info[6]))
+            self.lineEdit_9.setText(str(customer_info[7]))
+
+            for row_data in rows:
+                row_number = self.tableWidget.rowCount()
                 self.tableWidget.insertRow(row_number)
+
+                # Insert order data into the table
                 self.tableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(str(row_data[0])))
-                self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[3])))
-                self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[4])))
-                self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[5])))
-                
-                rows3 = self.db.execute_read_query("SELECT SUM(quantity * salePrice) FROM Customer_Order_Details where orderID={}".format(row_data[0]))
-                for row3 in rows3:
-                    total = row3[0]
-                self.tableWidget.setItem(row_number, 3, QtWidgets.QTableWidgetItem(str(total)))
-                rows4 = self.db.execute_read_query("Select * from Credit_Customers where customerID={}".format(id))
-                if rows4:
-                    for row4 in rows4:
-                        self.lineEdit_9.setText(str(row4[2]))
-                else:
-                    self.lineEdit_9.setText('0')
+                self.tableWidget.setItem(row_number, 1, QtWidgets.QTableWidgetItem(str(row_data[1])))
+                self.tableWidget.setItem(row_number, 2, QtWidgets.QTableWidgetItem(str(row_data[3])))
+                self.tableWidget.setItem(row_number, 4, QtWidgets.QTableWidgetItem(str(row_data[2])))
+                self.tableWidget.setItem(row_number, 3, QtWidgets.QTableWidgetItem(str(row_data[8])))
+
+                # Set cell as non-editable
                 for col in range(self.tableWidget.columnCount()):
                     item = self.tableWidget.item(row_number, col)
                     if item:
                         item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+
+                # Add a button to open details
                 openbtn = QtWidgets.QPushButton('Open', self.tableWidget)
                 openbtn.clicked.connect(lambda _, row=row_number: self.opendetail(row))
                 self.tableWidget.setCellWidget(row_number, 5, openbtn)
+
+
         else:
             msg_box = QtWidgets.QMessageBox()
             msg_box.setWindowTitle("Error")
