@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from topbar import MenuBar
 from db import DatabaseManager
 class Ui_MainWindow(object):
@@ -8,11 +7,12 @@ class Ui_MainWindow(object):
         self.row_details = []
         self.category_data = {}
         self.order_id = 0
-        self.total = 0.0  # initialize total in the __init__ method
+        self.total = 0.0  
         self.customerinfo = {} 
         self.custindata = False
         self.db = DatabaseManager()
         self.orderid()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -100,14 +100,13 @@ class Ui_MainWindow(object):
         self.lineEdit_8.setGeometry(QtCore.QRect(400, 40, 113, 24))
         self.lineEdit_8.setObjectName("lineEdit_8")
         MainWindow.setCentralWidget(self.centralwidget)
-        
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         
         menubar = MenuBar(MainWindow)
         MainWindow.setMenuBar(menubar)
-        self.lineEdit_4.returnPressed.connect(self.move)
+        self.lineEdit_4.returnPressed.connect(lambda: self.lineEdit_5.setFocus())
         self.lineEdit_5.returnPressed.connect(self.addNewRow)
         self.lineEdit_3.returnPressed.connect(self.handle_lineEdit3_enter) 
         self.lineEdit.returnPressed.connect(lambda: self.lineEdit_2.setFocus())
@@ -147,45 +146,31 @@ class Ui_MainWindow(object):
     
 
     def orderid(self):
-        rows = self.db.execute_read_query("SELECT MAX(orderID) FROM Customer_Order")
-        if rows:
-            for row in rows:
-                if row[0] is not None:
-                    self.order_id = int(row[0]) + 1
-                else:
-                    self.order_id = 1
+        query = "SELECT COALESCE(MAX(orderID), 0) + 1 FROM Customer_Order"
+        rows = self.db.execute_read_query(query)
+        if rows and rows[0][0] is not None:
+            self.order_id = int(rows[0][0])
         else:
             self.order_id = 1
-        
-    def move(self):
-        self.lineEdit_5.setFocus()
+
+    def showMessageBox(self, title, message, icon=QtWidgets.QMessageBox.Icon.Critical):
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setIcon(icon)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
 
     def addNewRow(self):
-        if self.lineEdit_4.text() == "":  # If product name is not entered
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please enter product name")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        if not self.lineEdit_4.text():
+            self.showMessageBox("Error", "Please enter product name")
             return
-        elif self.lineEdit_5.text() == "":  # If quantity is not entered
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please enter quantity")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        elif not self.lineEdit_5.text():
+            self.showMessageBox("Error", "Please enter quantity")
             return
-        elif not self.lineEdit_5.text().isdigit():  # If quantity is not a number
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please enter valid quantity")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        elif not self.lineEdit_5.text().isdigit():
+            self.showMessageBox("Error", "Please enter valid quantity")
             return
-        
         product_name = self.lineEdit_4.text()
         quantity = self.lineEdit_5.text()
         rows = self.db.execute_read_query("SELECT * FROM Products WHERE productName = '{}'".format(product_name))
@@ -196,23 +181,17 @@ class Ui_MainWindow(object):
                         if self.tableWidget.item(row_num, 0).text() == str(row[0]):
                             current_quantity = int(self.tableWidget.item(row_num, 3).text())
                             new_quantity = current_quantity + int(quantity)
-
-                            if new_quantity <= row[5]:  # Check if there is enough stock available
+                            if new_quantity <= row[5]:
                                 self.tableWidget.setItem(row_num, 3, QtWidgets.QTableWidgetItem(str(new_quantity)))
-
                                 product_price = row[2]
                                 total_price = float(product_price * new_quantity)
                                 self.tableWidget.setItem(row_num, 4, QtWidgets.QTableWidgetItem(str(total_price)))
-
                                 self.total += float(product_price * int(quantity))
                                 self.lineEdit_7.setText(str(self.total))
-
                                 for detail in self.row_details:
                                     if detail['pid'] == row[0]:
                                         detail['quantity'] = new_quantity
                                         detail['total_price'] = total_price
-                                
-                                # Clear the line edits
                                 self.lineEdit_5.clear()
                                 self.lineEdit_4.clear()
                                 self.lineEdit_4.setFocus()
@@ -220,84 +199,58 @@ class Ui_MainWindow(object):
                             else:
                                 self.showStockIssueMessageBox(row[5])
                                 return
-                    # If the loop completes without returning, it means the product is not in the list
                     self.addNewProductRow(row, quantity)
                 else:
                     self.showStockIssueMessageBox(row[5])
         else:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("No Product found against Name: {}".format(product_name))
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+            self.showMessageBox("Error", "No Product found against Name: {}".format(product_name))
 
 
-    def addNewProductRow(self, row, quantity):
+    def showStockIssueMessageBox(self, available_quantity):
+        self.showMessageBox("Error", f"Not enough stock available. Available quantity: {available_quantity}")
 
+    def addNewProductRow(self, product_row, quantity):
         row_position = self.tableWidget.rowCount()
         self.tableWidget.insertRow(row_position)
-
-        self.tableWidget.setItem(row_position, 0, QtWidgets.QTableWidgetItem(str(row[0])))
-        self.tableWidget.setItem(row_position, 1, QtWidgets.QTableWidgetItem(str(row[1])))
+        self.tableWidget.setItem(row_position, 0, QtWidgets.QTableWidgetItem(str(product_row[0])))
+        self.tableWidget.setItem(row_position, 1, QtWidgets.QTableWidgetItem(str(product_row[1])))
         self.tableWidget.setItem(row_position, 3, QtWidgets.QTableWidgetItem(quantity))
-        self.tableWidget.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(row[2])))
-
-        product_price = row[2]  # price will be fetched from db
+        self.tableWidget.setItem(row_position, 2, QtWidgets.QTableWidgetItem(str(product_row[2])))
+        product_price = product_row[2] 
         total_price = product_price * int(quantity)
         self.tableWidget.setItem(row_position, 4, QtWidgets.QTableWidgetItem(str(total_price)))
         for col in range(self.tableWidget.columnCount()):
             item = self.tableWidget.item(row_position, col)
             if item:
                 item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-
         delete_button = QtWidgets.QPushButton('Delete', self.tableWidget)
         delete_button.clicked.connect(lambda _, row=row_position: self.deleteRow(row))
         self.tableWidget.setCellWidget(row_position, 5, delete_button)
-
         self.total += float(product_price * int(quantity))
         self.lineEdit_7.setText(str(self.total))
-
         row_detail = {
-            'pid': row[0],
-            'pname': row[1],
+            'pid': product_row[0],
+            'pname': product_row[1],
             'quantity': quantity,
             'total_price': total_price,
-            'price': row[2]
+            'price': product_row[2]
         }
         self.row_details.append(row_detail)
-
-        # Clear the line edits
         self.lineEdit_5.clear()
         self.lineEdit_4.clear()
         self.lineEdit_4.setFocus()
 
     def deleteRow(self, row):
-        # Get the quantity and price of the item to be deleted
-        quantity = int(self.tableWidget.item(row, 3).text())
-        price = float(self.tableWidget.item(row, 2).text())
+        if 0 <= row < self.tableWidget.rowCount():
+            quantity = int(self.tableWidget.item(row, 3).text())
+            price = float(self.tableWidget.item(row, 2).text())
+            self.total -= float(quantity * price)
+            self.lineEdit_7.setText(str(self.total))
+            self.tableWidget.removeRow(row)
+            if 0 <= row < len(self.row_details):
+                del self.row_details[row]
 
-        # Update total
-        self.total -= float(quantity * price)
-        self.lineEdit_7.setText(str(self.total))
-
-        # Remove the row from the table
-        self.tableWidget.removeRow(row)
-
-        # Remove the corresponding entry from row_details
-        del self.row_details[row]
-
-
-    def showStockIssueMessageBox(self, available_stock):
-        msg_box = QtWidgets.QMessageBox()
-        msg_box.setWindowTitle("Stock Issue")
-        msg_box.setText("Stock Not available.\n{} pieces available in stock".format(available_stock))
-        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-
-        result = msg_box.exec()
     def handle_lineEdit3_enter(self):
-
         phone = self.lineEdit_3.text()
         rows = self.db.execute_read_query("SELECT * FROM Customers WHERE customerContact = '{}'".format(phone))
         if rows:
@@ -314,52 +267,30 @@ class Ui_MainWindow(object):
             self.lineEdit.setFocus()
 
     def opennextwin(self):
-        if(self.lineEdit_3.text() == ""):
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please Enter Contact Number")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        contact_number = self.lineEdit_3.text()
+        if not contact_number:
+            self.showMessageBox('Error',"Please Enter Contact Number")
             return
-        elif(len(self.lineEdit_3.text()) != 11):
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please Enter Valid Contact Number")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        elif len(contact_number) != 11:
+            self.showMessageBox('Error',"Please Enter Valid Contact Number")
             return
-        elif(self.lineEdit.text() == ""):
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please Enter First Name")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        elif not self.lineEdit.text():
+            self.showMessageBox('Error',"Please Enter First Name")
             return
-        elif(self.tableWidget.rowCount() == 0):
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please Enter Product")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+        elif self.tableWidget.rowCount() == 0:
+            self.showMessageBox('Error',"Please Enter Product")
             return
-        else:
-            self.customerinfo= {
-                'fname': self.lineEdit.text(),
-                'lname': self.lineEdit_2.text(),
-                'phone': self.lineEdit_3.text()
-            }
-            from orderdetail import Ui_MainWindow
-            self.win = QtWidgets.QMainWindow()
-            self.ui = Ui_MainWindow()
-            self.ui.setupUi(self.win)
-            self.ui.setValues(self.row_details,self.order_id,self.lineEdit_8.text(),self.total,self.customerinfo,self.custindata)
-            self.win.show()
-
-
+        self.customerinfo = {
+            'fname': self.lineEdit.text(),
+            'lname': self.lineEdit_2.text(),
+            'phone': contact_number
+        }
+        from orderdetail import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.ui.setValues(self.row_details, self.order_id, self.lineEdit_8.text(), self.total, self.customerinfo, self.custindata)
+        self.win.show()
 
 if __name__ == "__main__":
     import sys
