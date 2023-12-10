@@ -1,11 +1,10 @@
-
-
 from PyQt6 import QtCore, QtGui, QtWidgets
 from db import DatabaseManager
 
 class Ui_Form(object):
     def __init__(self):
         self.db = DatabaseManager()
+
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 300)
@@ -43,7 +42,6 @@ class Ui_Form(object):
         self.lineEdit.setFocus()
         self.lineEdit_2.returnPressed.connect(self.findbyname)
         self.lineEdit_4.returnPressed.connect(self.findbycontact)
-
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
