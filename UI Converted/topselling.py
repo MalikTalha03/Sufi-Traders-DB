@@ -1,4 +1,3 @@
-
 from PyQt6 import QtCore, QtGui, QtWidgets
 from db import DatabaseManager
 import matplotlib.pyplot as plt
@@ -9,6 +8,7 @@ from datetime import datetime, timedelta
 class Ui_MainWindow(object):
     def __init__(self):
         self.db = DatabaseManager()
+        
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -53,7 +53,6 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.pushButton.clicked.connect(self.search)
         self.pushButton_2.clicked.connect(self.clear)
-        
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -68,44 +67,40 @@ class Ui_MainWindow(object):
     def search(self):
         start_date = self.dateEdit.date().toString("yyyy-MM-dd")
         end_date = self.dateEdit_2.date().toString("yyyy-MM-dd")
-        result = self.db.execute_read_query(f"SELECT orderID FROM Customer_Order WHERE orderDate BETWEEN '{start_date}' AND '{end_date}'")
+        result = self.db.execute_read_query(
+            "SELECT orderID FROM Customer_Order WHERE orderDate BETWEEN '{}' AND '{}'".format(start_date, end_date)
+        )
         prod = {}
         if result:
             for res in result:
-                orderID = res[0]
-                result2 = self.db.execute_read_query(f"SELECT productID, quantity FROM Customer_Order_Details WHERE orderID = {orderID}")
+                order_id = res[0]
+                result2 = self.db.execute_read_query("""
+                    SELECT c.productID, c.quantity, p.productName
+                    FROM Customer_Order_Details c
+                    JOIN Products p ON c.productID = p.productID
+                    WHERE c.orderID = '{}'
+                """.format(order_id))
                 for res2 in result2:
-                    prodID = res2[0]
-                    
-                    prodname = self.db.execute_read_query(f"SELECT productName FROM Products WHERE productID = {prodID}")
-                    for name in prodname:
-                        pname = name[0]
-                    quantity = res2[1]
-                    prod[pname] = prod.get(pname, 0) + quantity
-        # plot pie for top 5 with quantity
+                    prod_id, quantity, prod_name = res2[0], res2[1], res2[2]
+                    prod[prod_name] = prod.get(prod_name, 0) + quantity
         top = sorted(prod.items(), key=lambda x: x[1], reverse=True)[:5]
-        labels = []
-        sizes = []
-        for t in top:
-            labels.append(t[0])
-            sizes.append(t[1])
+        if len(top) == 0:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Warning)
+            msg.setText("No data found!")
+            msg.setWindowTitle("Warning")
+            msg.exec()
+            return
+        labels, sizes = zip(*top)
         fig, ax = plt.subplots()
         fig.patch.set_facecolor('None')
         ax.pie(sizes, labels=labels, autopct='%1.1f%%', shadow=True, startangle=90)
         ax.axis('equal')
-
         canvas = FigureCanvas(fig)
-        layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout(self.widget)
         layout.addWidget(canvas)
-        
-        self.widget.setLayout(layout)
         self.widget.setStyleSheet("background-color: transparent;")
         self.widget.show()
-
-        
-        
-        
-
 
     def clear(self):
         self.dateEdit.setDate(QtCore.QDate.currentDate())
@@ -116,15 +111,6 @@ class Ui_MainWindow(object):
         self.widget.setObjectName("widget")
         self.widget.show()
         self.retranslateUi(MainWindow)
-
-
-
-
-
-
-
-        
-
 
 if __name__ == "__main__":
     import sys
