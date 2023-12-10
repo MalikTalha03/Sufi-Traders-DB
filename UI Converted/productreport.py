@@ -202,7 +202,6 @@ class Ui_MainWindow(object):
         canvas.setGeometry(0, 0, 751, 421)
         layout = QtWidgets.QVBoxLayout(self.widget)
         layout.addWidget(canvas)
-
         canvas.draw()
         fig.savefig('monthly.png')
         canvas.setParent(self.widget)
@@ -285,10 +284,6 @@ class Ui_MainWindow(object):
         self.widget.setGeometry(QtCore.QRect(20, 110, 741, 391))
         self.widget.setObjectName("widget")
         self.setupUi(MainWindow)
-    
-        
-
-
 
 if __name__ == "__main__":
     import sys
