@@ -1,10 +1,8 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
 from topbar import MenuBar
 from db import DatabaseManager
-
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
@@ -69,9 +67,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         MainWindow.setStatusBar(self.statusbar)
         self.lineEdit_6.returnPressed.connect(lambda: self.searchorder())
         self.pushButton.clicked.connect(lambda: self.updatedb())
-        
-
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         
@@ -96,25 +91,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
     def searchorder(self):
         self.clearall()
         self.orderno = self.lineEdit_6.text()
-        rows = self.db.execute_read_query("SELECT * FROM Customer_Order_Details WHERE orderID = '{}'".format(self.orderno))
+        query = """
+            SELECT COD.productID, P.productName, COD.quantity, COD.salePrice
+            FROM Customer_Order_Details COD
+            JOIN Products P ON COD.productID = P.productID
+            WHERE COD.orderID = '{}'
+        """.format(self.orderno)
+        rows = self.db.execute_read_query(query)
         if rows:
             for row in rows:
-                pname = self.db.execute_read_query("SELECT productName FROM Products WHERE productID = '{}'".format(row[1]))[0][0]
-                data = { 'pid': row[1],'pname':pname, 'quantity': row[2], 'price': row[3], 'total_price': float(row[2]*row[3]) }
-                self.total += float(row[2]*row[3])
+                data = {'pid': row[0],'pname': row[1],'quantity': row[2],'price': row[3],'total_price': float(row[2] * row[3])}
+                self.total += data['total_price']
                 self.rowdet.append(data)
-                self.lineEdit_7.setText('{}'.format(self.total))
             self.data = self.rowdet
             self.dupdata = [entry.copy() for entry in self.data]
             self.populate_table()
-            self.tableWidget.cellChanged.connect(lambda : self.updatedata())
+            self.tableWidget.cellChanged.connect(lambda: self.updatedata())
+            self.lineEdit_7.setText('{}'.format(self.total))
         else:
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Error")
             msg.setText("Order ID not found")
             msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.exec()
-            
+
     def clearall(self):
         self.tableWidget.clearContents()
         self.tableWidget.setRowCount(0)
@@ -140,7 +140,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
     def updatedata(self):
         self.total = 0
-
         for row_num in range(self.tableWidget.rowCount()):
             for col_num in range(self.tableWidget.columnCount()):
                 item = self.tableWidget.item(row_num, col_num)
@@ -154,13 +153,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                         item.setText('{}'.format(self.dupdata[row_num]['quantity']))
                         return
                     else:
-                        # Create a new list to avoid modifying self.data
                         self.dupdata[row_num]['quantity'] = int(item.text())
                         self.dupdata[row_num]['total_price'] = float(item.text()) * float(self.dupdata[row_num]['price'])
                 else:
                     continue
         self.total += sum([entry['total_price'] for entry in self.dupdata])
-
         self.lineEdit_7.setText('{}'.format(self.total))
 
     def updatedb(self):
@@ -182,8 +179,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 cred = float(cred)
             newcred = cred - self.total
             self.db.execute_query("UPDATE Credit_Customers SET totalCredit = '{}' WHERE customerID = (SELECT customerID FROM Customer_Order WHERE orderID = '{}')".format(newcred, self.orderno))
-
-
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Success")
             msg.setText("Return Completed. No refund Issued.")
@@ -203,8 +198,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.db.execute_query("UPDATE Products SET inventory = inventory + '{}' WHERE productID = '{}'".format(row['quantity'], row['pid']))
                 amounttorefund = totalpaid - self.total
                 self.db.execute_query("Insert into Customer_Transactions (transactionID, transactionType, transactionDate, totalAmount, orderID, transactionTime ) values ('{}', '{}', '{}', '{}', '{}', '{}')".format(maxtid, 'Refund', datetime.now().strftime("%Y-%m-%d"), amounttorefund, self.orderno, datetime.now().strftime("%H:%M:%S")))
-                
-                
                 msg = QtWidgets.QMessageBox()
                 msg.setWindowTitle("Success")
                 msg.setText("Return Completed. Refund of Rs. {} has been initiated".format(amounttorefund)) 
@@ -234,7 +227,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 self.clearall()
                 return
         elif credit == 'Paid':
-
             for row in self.dupdata:
                 pid = row['pid']
                 totalquantity = self.data[0]['quantity']
@@ -247,7 +239,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 maxtid = int(maxtid) + 1
             self.total = -(self.total)
             self.db.execute_query("Insert into Customer_Transactions (transactionID, transactionType, transactionDate, totalAmount, orderID, transactionTime ) values ('{}', '{}', '{}', '{}', '{}', '{}')".format(maxtid, 'Refund', datetime.now().strftime("%Y-%m-%d"), self.total, self.orderno, datetime.now().strftime("%H:%M:%S")))
-            
             msg = QtWidgets.QMessageBox()
             msg.setWindowTitle("Success")
             msg.setText("Refund of Rs. {} has been initiated".format(-(self.total)))
@@ -255,12 +246,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
             msg.exec()
             MainWindow.close()
             self.clearall()
-
-            
-
-        
-
-
 
 if __name__ == "__main__":
     import sys
