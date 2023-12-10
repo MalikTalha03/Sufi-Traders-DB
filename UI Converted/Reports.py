@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 class Ui_MainWindow(object):
     def __init__(self):
         self.db = DatabaseManager()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -68,7 +69,6 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
         self.pushButton.clicked.connect(self.search)
         self.pushButton_2.clicked.connect(self.clear)
-
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -179,8 +179,6 @@ class Ui_MainWindow(object):
         canvas.draw()
 
     def clear(self):
-        # remove wigdget to again display graph etx in widget
-        #error  QLayout: Attempting to add QLayout "" to QWidget "widget", which already has a layout
         self.widget.deleteLater()
         self.widget = QtWidgets.QWidget(parent=self.centralwidget)
         self.widget.setGeometry(QtCore.QRect(20, 110, 741, 391))
@@ -189,7 +187,6 @@ class Ui_MainWindow(object):
         self.dateEdit.setDate(QtCore.QDate.currentDate())
         self.dateEdit_2.setDate(QtCore.QDate.currentDate())
         self.setupUi(MainWindow)
-
         
 if __name__ == "__main__":
     import sys
