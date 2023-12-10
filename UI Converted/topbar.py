@@ -174,116 +174,136 @@ class MenuBar(QtWidgets.QMenuBar):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def custpaid(self):
         from paymentcust import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def custorder(self):
         from findcustorder import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def updcust(self):
         from updatecustomer import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def allcustorders(self):
         from allcustorders import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def suppnew_order(self):
         from supplierOrder import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def paysupp(self):
         from paysupplier import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def findsupp(self):
         from findsupplier import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def updsupp(self):
         from updsupplier import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def allsupporders(self):
         from allsupporder import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def findsupporder(self):
         from supporderdetail import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def inv(self):
         from checkinventory import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def addcategory(self):
         from addcatedory import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def addemp(self):
         from addemployee import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def checkempdetails(self):
         from empdetail import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def updemp(self):
         from updateemployee import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def delemp(self):
         pass
+
     def refundorder(self):
         from returns import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def topSelling(self):
         from topselling import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def sales(self):
         from Reports import Ui_Form
         self.win = QtWidgets.QMainWindow()
         self.ui = Ui_Form()
         self.ui.setupUi(self.win)
         self.win.show()
+
     def prodsale(self):
         from productreport import Ui_Form
         self.win = QtWidgets.QMainWindow()
@@ -296,8 +316,5 @@ if __name__ == "__main__":
     window = QtWidgets.QMainWindow()
     menubar = MenuBar(window)
     window.setMenuBar(menubar)
-
-    # Add other UI elements...
-
     window.show()
     app.exec()
