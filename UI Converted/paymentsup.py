@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from datetime import datetime
 from db import DatabaseManager
 
@@ -76,28 +75,26 @@ class Ui_Form(object):
         self.lineEdit_7.setText(str(total))
         self.lineEdit_8.setText(str(remaining))
 
+    def showMessageBox(self, title, message, icon=QtWidgets.QMessageBox.Icon.Critical):
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setWindowTitle(title)
+        msg_box.setText(message)
+        msg_box.setIcon(icon)
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
+        result = msg_box.exec()
+
     def completepayment(self):
         amount = self.lineEdit_9.text()
         orderid = self.lineEdit_6.text()
         remaining = self.lineEdit_8.text()
         paymentmethod = self.comboBox.currentText() 
         if amount == "":
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Please Enter Amount")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+            self.showMessageBox("Error", "Amount cannot be empty")
             return
         if float(amount) > float(remaining):
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setWindowTitle("Error")
-            msg_box.setText("Amount cannot be greater than remaining amount")
-            msg_box.setIcon(QtWidgets.QMessageBox.Icon.Critical)
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-            result = msg_box.exec()
+            self.showMessageBox("Error", "Amount cannot be greater than remaining amount")
             return
-        rows = self.db.fetch("SELECT MAX(transactionID) FROM Supplier_Transactions")
+        rows = self.db.execute_read_query("SELECT MAX(transactionID) FROM Supplier_Transactions")
         if rows:
             for row in rows:
                 if row[0] == None:
@@ -111,16 +108,10 @@ class Ui_Form(object):
             self.db.execute_query("Update Supplier_Order SET paymentStatus = 'Paid' WHERE orderID = '{}'".format(orderid))
         else:
             self.db.execute_query("Update Supplier_Order SET paymentStatus = 'Partially Paid' WHERE orderID = '{}'".format(orderid))
-        msg_box = QtWidgets.QMessageBox()
-        msg_box.setWindowTitle("Payment Completed")
-        msg_box.setText("Payment Completed Successfully")
-        msg_box.setIcon(QtWidgets.QMessageBox.Icon.Information)
-        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
-        result = msg_box.exec()
+        self.showMessageBox("Success", "Payment Completed", QtWidgets.QMessageBox.Icon.Information)
         self.lineEdit_9.setText("")
         self.lineEdit_8.setText("")
         self.lineEdit_7.setText("")
-
 
 if __name__ == "__main__":
     import sys
