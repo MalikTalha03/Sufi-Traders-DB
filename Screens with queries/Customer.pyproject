@@ -1,9 +1,0 @@
-{
-    "files": [
-        "mainwindow.py",
-        "form.ui",
-        "addproduct.ui",
-        "addsupplier.ui",
-        "supplierOrder.ui"
-    ]
-}
