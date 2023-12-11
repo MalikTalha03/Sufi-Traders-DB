@@ -3,6 +3,8 @@ from datetime import datetime
 from paymentcust import Ui_MainWindow as payment
 from topbar import MenuBar
 from db import DatabaseManager
+from fpdf import FPDF
+from pathlib import Path
 class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(Ui_MainWindow, self).__init__()
@@ -132,6 +134,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.close() 
 
     def openwin(self):
+        print(self.receipt())
         self.win = QtWidgets.QMainWindow()
         self.ui = payment()
         self.ui.setupUi(self.win)
@@ -146,6 +149,40 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.custinfo = custinfo
         self.custindata = custindata
         self.populate_table()
+    
+    def receipt(self):
+        receipt = ""
+        shop_name = "Sufi Traders"
+        shop_address = "Railway Road, Bhakkar"
+        shop_contact = "0333-6845939"
+        receipt += "--------------------------------\n"
+        receipt += "            {}\n".format(shop_name)
+        receipt += "    {}\n".format(shop_address)
+        receipt += "    {}\n".format(shop_contact)
+        receipt += "--------------------------------\n"
+        receipt += "Order ID: {}\n".format(self.orderno)
+        receipt += "--------------------------------\n"
+        receipt += "Product Name      Price     Qty\n"
+        receipt += "--------------------------------\n"
+        for data in self.data:
+            receipt += "{:<20}{:<10}{:<5}\n".format(data['pname'], data['price'], data['quantity'])
+        receipt += "--------------------------------\n"
+        receipt += "              Total:       {}\n".format(self.total)
+        receipt += "--------------------------------\n"
+        receipt += "Thank you for shopping with us!\n"
+        receipt += "--------------------------------\n"
+        receipt += "          Powered by Python\n"
+        receipt += "--------------------------------\n"
+
+        pdf = FPDF(orientation='P', unit='mm', format='A4')
+        pdf.add_page()
+        pdf.set_font("Arial", size=10)
+        pdf.multi_cell(0, 5, receipt, align='L')
+        pdf.output("{}.pdf".format(self.orderno))
+        
+
+        return receipt
+
 
 if __name__ == "__main__":
     import sys
