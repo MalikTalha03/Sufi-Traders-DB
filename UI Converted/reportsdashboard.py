@@ -209,36 +209,87 @@ class Ui_MainWindow(object):
         self.hidesub()
 
     def byCustomer(self):
-        self.showdatebox()
+        if self.radioButton_5.text() == "By Customer":
+            self.showdatebox()
+            self.comboBox.show()
+            self.comboBox.clear()
+            custs = self.db.execute_read_query("SELECT custFName,custLName FROM Customers")
+            for cust in custs:
+                self.comboBox.addItem(cust[0] + " " + cust[1])
+            self.label_4.show()
+            self.label_4.setText("Customer Name")
+        elif self.radioButton_5.text() == "Revenue":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
     
     def byProduct(self):
-        self.showdatebox()
+        if self.radioButton_6.text() == "By Product":
+            self.showdatebox()
+            self.comboBox.show()
+            self.comboBox.clear()
+            self.comboBox.addItem("All Products")
+            self.label_4.show()
+            self.label_4.setText("Product Name")
+            prods = self.db.execute_read_query("SELECT productName FROM Products")
+            for prod in prods:
+                self.comboBox.addItem(prod[0])
+        elif self.radioButton_6.text() == "Expense":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
 
     def byEmployee(self):
-        self.showdatebox()
+        if self.radioButton_7.text() == "By Employee":
+            self.showdatebox()
+            self.comboBox.show()
+            self.comboBox.clear()
+            self.comboBox.addItem("All Employees")
+            self.label_4.show()
+            self.label_4.setText("Employee Name")
+            emps = self.db.execute_read_query("SELECT empFName,empLName FROM Employee")
+            for emp in emps:
+                self.comboBox.addItem(emp[0] + " " + emp[1])
+        elif self.radioButton_7.text() == "Profit":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
     
     def byCategory(self):
-        self.radioButton_10.show()
-        self.radioButton_12.show()
-        self.radioButton_13.show()
-        self.radioButton_14.show()
-        self.dateEdit.show()
-        self.dateEdit_2.show()
-        self.label_2.show()
-        self.radioButton_15.show()
-        self.radioButton_11.show()
-        self.radioButton_17.show()
-        self.label_3.show()
-        self.pushButton.show()
-        self.pushButton_2.show()
-        self.pushButton_3.show()
+        if self.radioButton_8.text() == "By Category":
+            self.showdatebox()
+            self.comboBox.show()
+            self.comboBox.clear()
+            self.comboBox.addItem("All Categories")
+            self.label_4.show()
+            self.label_4.setText("Category Name")
+            cats = self.db.execute_read_query("SELECT categoryName FROM Categories")
+            for cat in cats:
+                self.comboBox.addItem(cat[0])
+        elif self.radioButton_8.text() == "Net Income":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
 
     def totalSales(self):
-        self.radioButton_10.setText("This Month")
-        self.radioButton_12.setText("This Year")
-        self.radioButton_13.setText("Date Range")
-        self.radioButton_14.setText("Today")
-        self.showdatebox()
+        if self.radioButton_9.text() == "Total Sales":
+            self.radioButton_14.setText("Today")
+            self.radioButton_10.setText("This Month")
+            self.radioButton_12.setText("This Year")
+            self.radioButton_10.setText("Date Range")
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_9.text() == "Cash Flow":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
 
     def finance(self):
         self.radioButton_5.setText("Revenue")
@@ -282,6 +333,8 @@ class Ui_MainWindow(object):
         self.dateEdit.hide()
         self.dateEdit_2.hide()
         self.label_2.hide()
+        self.label_4.hide()
+        self.comboBox.hide()
 
     def range(self):
         self.dateEdit.show()
