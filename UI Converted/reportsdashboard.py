@@ -146,6 +146,7 @@ class Ui_MainWindow(object):
         self.radioButton_14.clicked.connect(self.today)
         self.radioButton_12.clicked.connect(self.year)
         self.radioButton_10.clicked.connect(self.month)
+        self.pushButton_2.clicked.connect(self.openrep)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -223,6 +224,16 @@ class Ui_MainWindow(object):
             self.comboBox.clear()
             self.comboBox.hide()
             self.label_4.hide()
+        elif self.radioButton_5.text() == "Total Customers":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_5.text() == "All":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
     
     def byProduct(self):
         if self.radioButton_6.text() == "By Product":
@@ -236,6 +247,16 @@ class Ui_MainWindow(object):
             for prod in prods:
                 self.comboBox.addItem(prod[0])
         elif self.radioButton_6.text() == "Expense":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_6.text() == "New Customers":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_6.text() == "Product Categories":
             self.showdatebox()
             self.comboBox.clear()
             self.comboBox.hide()
@@ -257,6 +278,16 @@ class Ui_MainWindow(object):
             self.comboBox.clear()
             self.comboBox.hide()
             self.label_4.hide()
+        elif self.radioButton_7.text() == "Returning Customers":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_7.text() == "Product Availability":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
     
     def byCategory(self):
         if self.radioButton_8.text() == "By Category":
@@ -270,6 +301,16 @@ class Ui_MainWindow(object):
             for cat in cats:
                 self.comboBox.addItem(cat[0])
         elif self.radioButton_8.text() == "Net Income":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_8.text() == "Customer Loyalty":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+        elif self.radioButton_8.text() == "Low Stock Alert":
             self.showdatebox()
             self.comboBox.clear()
             self.comboBox.hide()
@@ -290,15 +331,22 @@ class Ui_MainWindow(object):
             self.comboBox.clear()
             self.comboBox.hide()
             self.label_4.hide()
+        elif self.radioButton_9.text() == "Product Turnover":
+            self.showdatebox()
+            self.comboBox.clear()
+            self.comboBox.hide()
+            self.label_4.hide()
+
 
     def finance(self):
         self.radioButton_5.setText("Revenue")
-        self.radioButton_6.setText("Expense")
         self.radioButton_7.setText("Profit")
         self.radioButton_8.setText("Net Income")
         self.radioButton_9.setText("Cash Flow")
         self.showsub() 
         self.hidesub()
+        self.radioButton_6.hide()
+
     
     def customer(self):
         self.radioButton_5.setText("Total Customers")
@@ -308,6 +356,7 @@ class Ui_MainWindow(object):
         self.radioButton_9.setText("Customer Satisfaction")
         self.showsub() 
         self.hidesub()
+        self.radioButton_9.hide()
 
     def inventory(self):
         self.radioButton_5.setText("All Products")
@@ -373,6 +422,13 @@ class Ui_MainWindow(object):
         self.radioButton_12.show()
         self.radioButton_13.show()
         self.radioButton_14.show()
+
+    def openrep(self):
+        self.radiodata()
+
+    def radiodata(self):
+        query = ""
+        
 
 
 if __name__ == "__main__":
