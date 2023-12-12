@@ -205,7 +205,8 @@ class Ui_MainWindow(object):
         self.radioButton_7.setText("By Employee")
         self.radioButton_8.setText("By Category")
         self.radioButton_9.setText("Total Sales")
-        self.showsub() 
+        self.showsub()
+        self.hidesub()
 
     def byCustomer(self):
         self.showdatebox()
@@ -246,6 +247,7 @@ class Ui_MainWindow(object):
         self.radioButton_8.setText("Net Income")
         self.radioButton_9.setText("Cash Flow")
         self.showsub() 
+        self.hidesub()
     
     def customer(self):
         self.radioButton_5.setText("Total Customers")
@@ -254,6 +256,7 @@ class Ui_MainWindow(object):
         self.radioButton_8.setText("Customer Loyalty")
         self.radioButton_9.setText("Customer Satisfaction")
         self.showsub() 
+        self.hidesub()
 
     def inventory(self):
         self.radioButton_5.setText("All Products")
@@ -262,6 +265,7 @@ class Ui_MainWindow(object):
         self.radioButton_8.setText("Low Stock Alert")
         self.radioButton_9.setText("Inventory Turnover")
         self.showsub() 
+        self.hidesub()
 
     def showsub(self):
         self.radioButton_5.show()
@@ -269,6 +273,15 @@ class Ui_MainWindow(object):
         self.radioButton_7.show()
         self.radioButton_8.show()
         self.radioButton_9.show()    
+
+    def hidesub(self):
+        self.radioButton_10.hide()
+        self.radioButton_12.hide()
+        self.radioButton_13.hide()
+        self.radioButton_14.hide()
+        self.dateEdit.hide()
+        self.dateEdit_2.hide()
+        self.label_2.hide()
 
     def range(self):
         self.dateEdit.show()
