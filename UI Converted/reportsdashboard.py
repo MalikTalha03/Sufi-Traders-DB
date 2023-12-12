@@ -156,7 +156,10 @@ class Ui_MainWindow(object):
         self.radioButton_7.clicked.connect(self.byEmployee)
         self.radioButton_8.clicked.connect(self.byCategory)
         self.radioButton_9.clicked.connect(self.totalSales)
-
+        self.radioButton_13.clicked.connect(self.range)
+        self.radioButton_14.clicked.connect(self.today)
+        self.radioButton_12.clicked.connect(self.year)
+        self.radioButton_10.clicked.connect(self.month)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -306,8 +309,6 @@ class Ui_MainWindow(object):
         self.radioButton_13.show()
         self.radioButton_14.show()
 
-    
-    
     def finance(self):
         self.radioButton_5.setText("Revenue")
         self.radioButton_6.setText("Expense")
@@ -338,6 +339,38 @@ class Ui_MainWindow(object):
         self.radioButton_7.show()
         self.radioButton_8.show()
         self.radioButton_9.show()    
+
+    def range(self):
+        self.dateEdit.show()
+        self.dateEdit_2.show()
+        self.label_2.show()
+        self.openrep()
+
+    def openrep(self):
+        self.label_3.show()
+        self.radioButton_15.show()
+        self.radioButton_11.show()
+        self.radioButton_17.show()
+        self.pushButton.show()
+        self.pushButton_2.show()
+        self.pushButton_3.show()
+
+    def clearsub(self):
+        self.dateEdit.hide()
+        self.dateEdit_2.hide()
+        self.label_2.hide()
+
+    def today(self):
+        self.openrep()
+        self.clearsub()
+
+    def month(self):
+        self.openrep()
+        self.clearsub()
+
+    def year(self):
+        self.openrep()
+        self.clearsub()
 
 
 if __name__ == "__main__":
