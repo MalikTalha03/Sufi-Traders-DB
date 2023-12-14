@@ -428,7 +428,50 @@ class Ui_MainWindow(object):
 
     def radiodata(self):
         query = ""
+        if self.radioButton.isChecked() == True:
+            if self.radioButton_9.clicked == True and self.radioButton_9.text() == "Total Sales":
+                if self.radioButton_14.isChecked() == True:
+                    query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
+                elif self.radioButton_10.isChecked() == True:
+                    query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
+                elif self.radioButton_12.isChecked() == True:
+                    query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
+                elif self.radioButton_13.isChecked() == True:
+                    query = "SELECT SUM(total) FROM Sales WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
+            elif self.radioButton_5.isChecked() == True and self.radioButton_5.text() == "By Customer":
+                if self.radioButton_14.isChecked() == True:
+                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE saleDate = CURRENT_DATE() GROUP BY custFName,custLName"
+                elif self.radioButton_10.isChecked() == True:
+                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
+                elif self.radioButton_12.isChecked() == True:
+                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
+                elif self.radioButton_13.isChecked() == True:
+                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "' GROUP BY custFName,custLName"
+            elif self.radioButton_6.isChecked() == True and self.radioButton_6.text() == "By Product":
+                if self.radioButton_14.isChecked() == True:
+                    query = "SELECT productName,SUM(total) FROM Sales INNER JOIN Products ON Sales.productID = Products.productID WHERE saleDate = CURRENT_DATE() GROUP BY productName"
+                elif self.radioButton_10.isChecked() == True:
+                    query = "SELECT productName,SUM(total) FROM Sales INNER JOIN Products ON Sales.productID = Products.productID WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY productName"
+                elif self.radioButton_12.isChecked() == True:
+                    query = "SELECT productName,SUM(total) FROM Sales INNER JOIN Products ON Sales.productID = Products.productID WHERE YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY productName"
+                elif self.radioButton_13.isChecked() == True:
+                    query = "SELECT productName,SUM(total) FROM Sales INNER JOIN Products ON Sales.productID = Products.productID WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "' GROUP BY productName"
+            elif self.radioButton_7.isChecked() == True and self.radioButton_7.text() == "By Employee":
+                if self.radioButton_14.isChecked() == True:
+                    query = "SELECT empFName,empLName,SUM(total) FROM Sales INNER JOIN Employee ON Sales.employeeID = Employee.employeeID WHERE saleDate = CURRENT_DATE() GROUP BY empFName,empLName"
+                elif self.radioButton_10.isChecked() == True:
+                    query = "SELECT empFName,empLName,SUM(total) FROM Sales INNER JOIN Employee ON Sales.employeeID = Employee.employeeID WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY empFName,empLName"
+                elif self.radioButton_12.isChecked() == True:
+                    query = "SELECT empFName,empLName,SUM(total) FROM Sales INNER JOIN Employee ON Sales.employeeID = Employee.employeeID WHERE YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY empFName,empLName"
+                elif self.radioButton_13.isChecked() == True:
+                    query = "SELECT empFName,empLName,SUM(total) FROM Sales INNER JOIN Employee ON Sales.employeeID = Employee.employeeID WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "' GROUP BY empFName,empLName"
+            elif self.radioButton_8.isChecked() == True and self.radioButton_8.text() == "By Category":
+                if self.radioButton_14.isChecked() == True:
+                    query = "SELECT categoryName,SUM(total) FROM Sales INNER JOIN Products ON Sales.productID = Products.productID INNER JOIN Categories ON Products.categoryID = Categories.categoryID WHERE saleDate = CURRENT_DATE() GROUP BY categoryName"
+                elif self.radioButton_10.isChecked() == True:
+                    
         
+
 
 
 if __name__ == "__main__":
