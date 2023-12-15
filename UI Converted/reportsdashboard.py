@@ -146,7 +146,6 @@ class Ui_MainWindow(object):
         self.radioButton_14.clicked.connect(self.today)
         self.radioButton_12.clicked.connect(self.year)
         self.radioButton_10.clicked.connect(self.month)
-        self.pushButton_2.clicked.connect(self.openrep)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -423,9 +422,6 @@ class Ui_MainWindow(object):
         self.radioButton_13.show()
         self.radioButton_14.show()
 
-    def openrep(self):
-        self.radiodata()
-
     def radiodata(self):
         query = ""
         if self.radioButton.isChecked() == True:
@@ -586,6 +582,23 @@ class Ui_MainWindow(object):
                 elif self.radioButton_13.isChecked() == True:
                     query = "SELECT COUNT(productID) FROM Products WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
         
+
+    def plot(self):
+        if self.radioButton_15.isChecked() == True:
+            self.bar()
+        elif self.radioButton_11.isChecked() == True:
+            self.pie()
+        elif self.radioButton_17.isChecked() == True:
+            self.linechart()
+    
+    def bar(self):
+        pass
+
+    def pie(self):
+        pass
+
+    def linechart(self):
+        pass
 
 
 
