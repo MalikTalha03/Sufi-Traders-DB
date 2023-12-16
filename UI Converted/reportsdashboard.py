@@ -320,7 +320,7 @@ class Ui_MainWindow(object):
             self.radioButton_14.setText("Today")
             self.radioButton_10.setText("This Month")
             self.radioButton_12.setText("This Year")
-            self.radioButton_10.setText("Date Range")
+            self.radioButton_13.setText("Date Range")
             self.showdatebox()
             self.comboBox.clear()
             self.comboBox.hide()
@@ -427,9 +427,34 @@ class Ui_MainWindow(object):
         if self.radioButton.isChecked() == True:
             if self.radioButton_9.clicked == True and self.radioButton_9.text() == "Total Sales":
                 if self.radioButton_14.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
+                    query = """SELECT
+                                    DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                    SUM(COD.quantity * COD.salePrice) AS HourlySales
+                                FROM
+                                    Customer_Order CO
+                                JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CONVERT(DATE, CO.orderDate) = '2023-12-04'
+                                GROUP BY
+                                    DATEPART(HOUR, CO.orderTime)
+                                ORDER BY
+                                    OrderHour;"""
                 elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
+                    query = """SELECT
+                                    DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                    SUM(COD.quantity * COD.salePrice) AS HourlySales
+                                FROM
+                                    Customer_Order CO
+                                JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                GROUP BY
+                                    DATEPART(HOUR, CO.orderTime)
+                                ORDER BY
+                                    OrderHour;"""
                 elif self.radioButton_12.isChecked() == True:
                     query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
                 elif self.radioButton_13.isChecked() == True:
