@@ -456,9 +456,62 @@ class Ui_MainWindow(object):
                                 ORDER BY
                                     OrderHour;"""
                 elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
+                    query = """ SELECT
+                                    YEAR(CONVERT(DATE, CO.orderDate)) AS OrderYear,
+                                    MONTH(CONVERT(DATE, CO.orderDate)) AS OrderMonth,
+                                    SUM(COD.quantity * COD.salePrice) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    YEAR(CONVERT(DATE, CO.orderDate)),
+                                    MONTH(CONVERT(DATE, CO.orderDate))
+                                ORDER BY
+                                    OrderYear, OrderMonth; """
                 elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
+                    query = """IF DATEDIFF(MONTH, @StartDate, @EndDate) > 1
+                                BEGIN
+                                    SELECT
+                                        Calendar.Year,
+                                        Calendar.MonthNumber,
+                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                    FROM (
+                                        SELECT
+                                            YEAR(DATEADD(MONTH, number, @StartDate)) AS Year,
+                                            MONTH(DATEADD(MONTH, number, @StartDate)) AS MonthNumber
+                                        FROM master.dbo.spt_values
+                                        WHERE type = 'P'
+                                            AND number BETWEEN 0 AND DATEDIFF(MONTH, @StartDate, @EndDate)
+                                    ) Calendar
+                                    LEFT JOIN
+                                        Customer_Order CO ON Calendar.MonthNumber = MONTH(CONVERT(DATE, CO.orderDate))
+                                    LEFT JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    GROUP BY
+                                        Calendar.Year,
+                                        Calendar.MonthNumber
+                                    ORDER BY
+                                        Year, MonthNumber;
+                                END
+                                ELSE
+                                BEGIN
+                                    SELECT
+                                        CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                    FROM
+                                        Customer_Order CO
+                                    LEFT JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    WHERE
+                                        CONVERT(DATE, CO.orderDate) BETWEEN @StartDate AND @EndDate
+                                    GROUP BY
+                                        CONVERT(DATE, CO.orderDate)
+                                    ORDER BY
+                                        OrderDate;
+                                END"""
             elif self.radioButton_5.isChecked() == True and self.radioButton_5.text() == "By Customer":
                 if self.radioButton_14.isChecked() == True:
                     query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE saleDate = CURRENT_DATE() GROUP BY custFName,custLName"
