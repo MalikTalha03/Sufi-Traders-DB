@@ -514,7 +514,20 @@ class Ui_MainWindow(object):
                                 END"""
             elif self.radioButton_5.isChecked() == True and self.radioButton_5.text() == "By Customer":
                 if self.radioButton_14.isChecked() == True:
-                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE saleDate = CURRENT_DATE() GROUP BY custFName,custLName"
+                    query = """ SELECT
+                                    DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.customerID = 1
+                                    AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                GROUP BY
+                                    DATEPART(HOUR, CO.orderTime)
+                                ORDER BY
+                                    OrderHour;"""
                 elif self.radioButton_10.isChecked() == True:
                     query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
                 elif self.radioButton_12.isChecked() == True:
