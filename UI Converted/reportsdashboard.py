@@ -546,7 +546,23 @@ class Ui_MainWindow(object):
                                     OrderDate;
                                 """.format(self.id())
                 elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
+                    query = """SELECT
+                                    YEAR(CO.orderDate) AS OrderYear,
+                                    MONTH(CO.orderDate) AS OrderMonth,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.customerID = '{}'
+                                    AND YEAR(CO.orderDate) = YEAR(GETDATE())
+                                GROUP BY
+                                    YEAR(CO.orderDate),
+                                    MONTH(CO.orderDate)
+                                ORDER BY
+                                    OrderYear,
+                                    OrderMonth;""".format(self.id())
                 elif self.radioButton_13.isChecked() == True:
                     query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "' GROUP BY custFName,custLName"
             elif self.radioButton_6.isChecked() == True and self.radioButton_6.text() == "By Product":
