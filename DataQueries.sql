@@ -1,17 +1,17 @@
 SELECT
-    YEAR(CO.orderDate) AS OrderYear,
-    MONTH(CO.orderDate) AS OrderMonth,
-    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+    P.productID,
+    P.productName,
+    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
 FROM
     Customer_Order CO
-LEFT JOIN
+JOIN
     Customer_Order_Details COD ON CO.orderID = COD.orderID
+JOIN
+    Products P ON COD.productID = P.productID
 WHERE
-    CO.customerID = 1
-    AND CO.orderDate BETWEEN '2023-1-1' AND '2023-12-31'
+    CONVERT(DATE, CO.orderDate) = GETDATE()
 GROUP BY
-    YEAR(CO.orderDate),
-    MONTH(CO.orderDate)
+    P.productID,
+    P.productName
 ORDER BY
-    OrderYear,
-    OrderMonth;
+    DailySales DESC;
