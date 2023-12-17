@@ -529,7 +529,22 @@ class Ui_MainWindow(object):
                                 ORDER BY
                                     OrderHour;""".format(self.id())
                 elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
+                    query = """SELECT
+                                    CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.customerID = '{}'
+                                    AND MONTH(CO.orderDate) = MONTH(GETDATE())
+                                    AND YEAR(CO.orderDate) = YEAR(GETDATE())
+                                GROUP BY
+                                    CONVERT(DATE, CO.orderDate)
+                                ORDER BY
+                                    OrderDate;
+                                """.format(self.id())
                 elif self.radioButton_12.isChecked() == True:
                     query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
                 elif self.radioButton_13.isChecked() == True:
