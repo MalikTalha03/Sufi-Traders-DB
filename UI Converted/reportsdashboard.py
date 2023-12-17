@@ -522,12 +522,12 @@ class Ui_MainWindow(object):
                                 LEFT JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    CO.customerID = 1
+                                    CO.customerID = '{}'
                                     AND CONVERT(DATE, CO.orderDate) = GETDATE()
                                 GROUP BY
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
-                                    OrderHour;"""
+                                    OrderHour;""".format(self.id())
                 elif self.radioButton_10.isChecked() == True:
                     query = "SELECT custFName,custLName,SUM(total) FROM Sales INNER JOIN Customers ON Sales.customerID = Customers.customerID WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE()) GROUP BY custFName,custLName"
                 elif self.radioButton_12.isChecked() == True:
@@ -673,7 +673,14 @@ class Ui_MainWindow(object):
                 elif self.radioButton_13.isChecked() == True:
                     query = "SELECT COUNT(productID) FROM Products WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
         
-
+    def id(self):
+        name = self.comboBox.currentText()
+        name = name.split()
+        fname = name[0]
+        lname = name[1]
+        query = "SELECT customerID FROM Customers WHERE custFName = '{}' AND custLName = '{}'".format(fname,lname)
+        id = self.db.execute_read_query(query)
+        return id[0][0]
     def plot(self):
         if self.radioButton_15.isChecked() == True:
             self.bar()
