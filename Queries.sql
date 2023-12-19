@@ -1,108 +1,106 @@
 Create Database Sufi_Traders;
 
-Create Table Employee (
-employeeID int Primary Key,
-empFName varchar(25) Not Null,
-empLName varchar(25),
-empContact varchar(11) Not Null,
-employeeAddress varchar(100) Not Null,
-salary decimal(10, 2) Not Null,
-employeeType varchar(25) Not Null
+CREATE TABLE Employee (
+    employeeID int PRIMARY KEY,
+    empFName varchar(25) NOT NULL,
+    empLName varchar(25),
+    empContact varchar(11) NOT NULL,
+    employeeAddress varchar(100) NOT NULL,
+    salary decimal(10, 2) NOT NULL,
+    employeeType varchar(25) NOT NULL,
+    passwords varchar(150)
 );
 
-Create Table Customers (
-customerID int Primary Key,
-custFName varchar(25) Not Null,
-custLName varchar(25),
-customerContact varchar(11) Not Null
+CREATE TABLE Customers (
+    customerID int PRIMARY KEY,
+    custFName varchar(25) NOT NULL,
+    custLName varchar(25),
+    customerContact varchar(11) NOT NULL
 );
 
-Create Table Credit_Customers(
-creditCustomerID int Primary Key,
-customerID int Foreign Key References Customers(customerID) Not Null UNIQUE,
-totalCredit decimal(10, 2) Not Null
+CREATE TABLE Credit_Customers (
+    creditCustomerID int PRIMARY KEY,
+    customerID int FOREIGN KEY REFERENCES Customers(customerID) NOT NULL UNIQUE,
+    totalCredit decimal(10, 2) NOT NULL
 );
 
-Create Table Customer_Order(
-orderID int Primary Key,
-customerID int Foreign Key References Customers(customerID) Not Null,
-employeeID int Foreign Key References Employee(employeeID) Not Null,
-orderDate DATE Not Null,
-orderTime TIME Not Null,
-paymentStatus varchar(15) Not Null
-CONSTRAINT paystat CHECK (paymentStatus IN ('Paid', 'Credit','Partially Paid'))
+CREATE TABLE Customer_Order (
+    orderID int PRIMARY KEY,
+    customerID int FOREIGN KEY REFERENCES Customers(customerID) NOT NULL,
+    employeeID int FOREIGN KEY REFERENCES Employee(employeeID) NOT NULL,
+    orderDate date NOT NULL,
+    orderTime time(7) NOT NULL,
+    paymentStatus varchar(15) NOT NULL
+    CONSTRAINT paystat CHECK (paymentStatus IN ('Paid', 'Credit','Partially Paid'))
 );
 
-Create Table Categories(
-categoryID int Primary Key,
-categoryName varchar(25) Not Null
+CREATE TABLE Categories (
+    categoryID int PRIMARY KEY,
+    categoryName varchar(25) NOT NULL
 );
 
-Create Table Discounts(
-discountID int Primary Key,
-orderID int Foreign Key References Customer_Order(orderID) Not Null,
-amount decimal(10, 2) Not Null
+CREATE TABLE Discounts (
+    discountID int PRIMARY KEY,
+    orderID int FOREIGN KEY REFERENCES Customer_Order(orderID) NOT NULL,
+    amount decimal(10, 2) NOT NULL
 );
 
-Create Table Supplier (
-supplierID int Primary Key ,
-supplierName varchar(25) Not Null,
-supplierAddress varchar(50) Not Null,
-supplierContact varchar(11) Not Null
+CREATE TABLE Supplier (
+    supplierID int PRIMARY KEY,
+    supplierName varchar(25) NOT NULL,
+    supplierAddress varchar(50) NOT NULL,
+    supplierContact varchar(11) NOT NULL
 );
 
-Create Table Supplier_Order(
-orderID int Primary Key,
-orderDate date Not Null,
-supplierID int Foreign Key References Supplier(supplierID) Not Null,
-totalAmount decimal(10, 2) Not Null,
-paymentStatus varchar(15) Not Null
-CONSTRAINT paymentst CHECK (paymentStatus IN ('Paid','Not Paid','Partially Paid'))
+CREATE TABLE Supplier_Order (
+    orderID int PRIMARY KEY,
+    orderDate date NOT NULL,
+    supplierID int FOREIGN KEY REFERENCES Supplier(supplierID) NOT NULL,
+    totalAmount decimal(10, 2) NOT NULL,
+    paymentStatus varchar(15) NOT NULL
+    CONSTRAINT paymentst CHECK (paymentStatus IN ('Paid','Not Paid','Partially Paid'))
 );
 
-Create Table Products (
-productID int Primary Key,
-productName varchar(50) Not Null,
-salePrice decimal(10, 2) Not Null,
-categoryID int Foreign Key References Categories(categoryID) Not Null,
-supplierID int Foreign Key References Supplier(supplierID) Not Null,
-inventory int Not Null
+CREATE TABLE Products (
+    productID int PRIMARY KEY,
+    productName varchar(50) NOT NULL,
+    salePrice decimal(10, 2) NOT NULL,
+    categoryID int FOREIGN KEY REFERENCES Categories(categoryID) NOT NULL,
+    supplierID int FOREIGN KEY REFERENCES Supplier(supplierID) NOT NULL,
+    inventory int NOT NULL
 );
 
-Create Table Supplier_Order_Details (
-orderId int Foreign Key References Supplier_Order(orderID) Not Null,
-productID int Foreign Key References Products(productID) Not Null,
-purchasePrice decimal(10, 2) Not Null,
-quantity int Not Null
-Primary Key (orderID, productID)
+CREATE TABLE Supplier_Order_Details (
+    orderId int FOREIGN KEY REFERENCES Supplier_Order(orderID) NOT NULL,
+    productID int FOREIGN KEY REFERENCES Products(productID) NOT NULL,
+    purchasePrice decimal(10, 2) NOT NULL,
+    quantity int NOT NULL,
+    PRIMARY KEY (orderId, productID)
 );
 
-Create Table Customer_Order_Details (
-orderId int Foreign Key References Customer_Order(orderID) Not Null,
-productID int Foreign Key References Products(productID) Not Null,
-quantity int Not Null,
-salePrice decimal(10, 2) Not Null,
-Primary Key (orderID, productID)
+CREATE TABLE Customer_Order_Details (
+    orderId int FOREIGN KEY REFERENCES Customer_Order(orderID) NOT NULL,
+    productID int FOREIGN KEY REFERENCES Products(productID) NOT NULL,
+    quantity int NOT NULL,
+    salePrice decimal(10, 2) NOT NULL,
+    PRIMARY KEY (orderId, productID)
 );
 
-Create Table Customer_Transactions(
-transactionID int Primary Key,
-transactionType varchar(15) Not Null
-CONSTRAINT chk_transaction CHECK (transactionType IN ('Cash', 'Credit', 'Bank Transfer','Refund')),
-totalAmount decimal(10, 2) Not Null,
-orderID int Foreign Key References Customer_Order(orderID) Not Null,
-transactionDate Date Not Null,
-transactionTime TIME Not Null
-
+CREATE TABLE Customer_Transactions (
+    transactionID int PRIMARY KEY,
+    transactionType varchar(15) NOT NULL
+    CONSTRAINT chk_transaction CHECK (transactionType IN ('Cash', 'Credit', 'Bank Transfer','Refund')),
+    totalAmount decimal(10, 2) NOT NULL,
+    orderID int FOREIGN KEY REFERENCES Customer_Order(orderID) NOT NULL,
+    transactionDate date NOT NULL,
+    transactionTime time(7) NOT NULL
 );
 
-Create Table Supplier_Transactions(
-transactionID int Primary Key,
-transactionType varchar(15) Not Null
-CONSTRAINT chksupp_transaction CHECK (transactionType IN ('Cash', 'Bank Transfer')),
-totalAmount decimal(10, 2) Not Null,
-orderID int Foreign Key References Supplier_Order(orderID) Not Null,
-transactionDate date Not Null
+CREATE TABLE Supplier_Transactions (
+    transactionID int PRIMARY KEY,
+    transactionType varchar(15) NOT NULL
+    CONSTRAINT chksupp_transaction CHECK (transactionType IN ('Cash', 'Bank Transfer')),
+    totalAmount decimal(10, 2) NOT NULL,
+    orderID int FOREIGN KEY REFERENCES Supplier_Order(orderID) NOT NULL,
+    transactionDate date NOT NULL
 );
-
-
