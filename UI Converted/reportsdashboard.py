@@ -686,15 +686,20 @@ class Ui_MainWindow(object):
                         GROUP BY Categories.categoryName
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
 
-            elif self.radioButton_9.isChecked() == True and self.radioButton_9.text() == "Total Sales":
-                if self.radioButton_14.isChecked() == True:
+            if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Total Sales":
+                if self.radioButton_14.isChecked():
                     query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
+                elif self.radioButton_10.isChecked():
                     query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
+                elif self.radioButton_12.isChecked():
                     query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
+                elif self.radioButton_13.isChecked():
+                    query = """
+                        SELECT SUM(total)
+                        FROM Sales
+                        WHERE saleDate BETWEEN '{}' AND '{}'
+                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
+
         elif self.radioButton_2.isChecked() == True:
             if self.radioButton_9.isChecked() == True and self.radioButton_9.text() == "Cash Flow":
                 if self.radioButton_14.isChecked() == True:
