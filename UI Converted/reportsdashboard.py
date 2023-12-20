@@ -424,9 +424,9 @@ class Ui_MainWindow(object):
 
     def radiodata(self):
         query = ""
-        if self.radioButton.isChecked() == True:
+        if self.radioButton.isChecked():
             if self.radioButton_9.clicked == True and self.radioButton_9.text() == "Total Sales":
-                if self.radioButton_14.isChecked() == True:
+                if self.radioButton_14.isChecked():
                     query = """SELECT
                                     DATEPART(HOUR, CO.orderTime) AS OrderHour,
                                     SUM(COD.quantity * COD.salePrice) AS HourlySales
@@ -440,7 +440,7 @@ class Ui_MainWindow(object):
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
                                     OrderHour;"""
-                elif self.radioButton_10.isChecked() == True:
+                elif self.radioButton_10.isChecked():
                     query = """SELECT
                                     DATEPART(HOUR, CO.orderTime) AS OrderHour,
                                     SUM(COD.quantity * COD.salePrice) AS HourlySales
@@ -455,7 +455,7 @@ class Ui_MainWindow(object):
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
                                     OrderHour;"""
-                elif self.radioButton_12.isChecked() == True:
+                elif self.radioButton_12.isChecked():
                     query = """ SELECT
                                     YEAR(CONVERT(DATE, CO.orderDate)) AS OrderYear,
                                     MONTH(CONVERT(DATE, CO.orderDate)) AS OrderMonth,
@@ -471,7 +471,7 @@ class Ui_MainWindow(object):
                                     MONTH(CONVERT(DATE, CO.orderDate))
                                 ORDER BY
                                     OrderYear, OrderMonth; """
-                elif self.radioButton_13.isChecked() == True:
+                elif self.radioButton_13.isChecked():
                     query = """IF DATEDIFF(MONTH, @StartDate, @EndDate) > 1
                                 BEGIN
                                     SELECT
@@ -512,8 +512,8 @@ class Ui_MainWindow(object):
                                     ORDER BY
                                         OrderDate;
                                 END"""
-            elif self.radioButton_5.isChecked() == True and self.radioButton_5.text() == "By Customer":
-                if self.radioButton_14.isChecked() == True:
+            elif self.radioButton_5.isChecked() and self.radioButton_5.text() == "By Customer":
+                if self.radioButton_14.isChecked():
                     query = """ SELECT
                                     DATEPART(HOUR, CO.orderTime) AS OrderHour,
                                     ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
@@ -528,7 +528,7 @@ class Ui_MainWindow(object):
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
                                     OrderHour;""".format(self.id())
-                elif self.radioButton_10.isChecked() == True:
+                elif self.radioButton_10.isChecked():
                     query = """SELECT
                                     CONVERT(DATE, CO.orderDate) AS OrderDate,
                                     ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
@@ -545,7 +545,7 @@ class Ui_MainWindow(object):
                                 ORDER BY
                                     OrderDate;
                                 """.format(self.id())
-                elif self.radioButton_12.isChecked() == True:
+                elif self.radioButton_12.isChecked():
                     query = """SELECT
                                     YEAR(CO.orderDate) AS OrderYear,
                                     MONTH(CO.orderDate) AS OrderMonth,
@@ -563,7 +563,7 @@ class Ui_MainWindow(object):
                                 ORDER BY
                                     OrderYear,
                                     OrderMonth;""".format(self.id())
-                elif self.radioButton_13.isChecked() == True:
+                elif self.radioButton_13.isChecked():
                     query = """SELECT
                                     YEAR(CO.orderDate) AS OrderYear,
                                     MONTH(CO.orderDate) AS OrderMonth,
@@ -584,106 +584,122 @@ class Ui_MainWindow(object):
             if self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
                 if self.radioButton_14.isChecked():
                     query = """
-                        SELECT Products.productName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        WHERE Sales.saleDate = CURRENT_DATE()
-                        GROUP BY Products.productName
+                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        WHERE CONVERT(DATE, CO.orderDate) = CURRENT_DATE()
+                        GROUP BY Products.productName;
                     """
                 elif self.radioButton_10.isChecked():
                     query = """
-                        SELECT Products.productName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        WHERE MONTH(Sales.saleDate) = MONTH(CURRENT_DATE()) AND YEAR(Sales.saleDate) = YEAR(CURRENT_DATE())
-                        GROUP BY Products.productName
+                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                        GROUP BY Products.productName;
                     """
                 elif self.radioButton_12.isChecked():
                     query = """
-                        SELECT Products.productName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        WHERE YEAR(Sales.saleDate) = YEAR(CURRENT_DATE())
-                        GROUP BY Products.productName
+                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                        GROUP BY Products.productName;
                     """
                 elif self.radioButton_13.isChecked():
                     query = """
-                        SELECT Products.productName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        WHERE Sales.saleDate BETWEEN '{}' AND '{}'
-                        GROUP BY Products.productName
+                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                        GROUP BY Products.productName;
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                
             if self.radioButton_7.isChecked() and self.radioButton_7.text() == "By Employee":
                 if self.radioButton_14.isChecked():
                     query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Employee ON Sales.employeeID = Employee.employeeID
-                        WHERE Sales.saleDate = CURRENT_DATE()
-                        GROUP BY Employee.empFName, Employee.empLName
+                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Employee ON CO.employeeID = Employee.employeeID
+                        WHERE CONVERT(DATE, CO.orderDate) = CURRENT_DATE()
+                        GROUP BY Employee.empFName, Employee.empLName;
                     """
                 elif self.radioButton_10.isChecked():
                     query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Employee ON Sales.employeeID = Employee.employeeID
-                        WHERE MONTH(Sales.saleDate) = MONTH(CURRENT_DATE()) AND YEAR(Sales.saleDate) = YEAR(CURRENT_DATE())
-                        GROUP BY Employee.empFName, Employee.empLName
+                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Employee ON CO.employeeID = Employee.employeeID
+                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                        GROUP BY Employee.empFName, Employee.empLName;
                     """
                 elif self.radioButton_12.isChecked():
                     query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Employee ON Sales.employeeID = Employee.employeeID
-                        WHERE YEAR(Sales.saleDate) = YEAR(CURRENT_DATE())
-                        GROUP BY Employee.empFName, Employee.empLName
+                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Employee ON CO.employeeID = Employee.employeeID
+                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                        GROUP BY Employee.empFName, Employee.empLName;
                     """
                 elif self.radioButton_13.isChecked():
                     query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Employee ON Sales.employeeID = Employee.employeeID
-                        WHERE Sales.saleDate BETWEEN '{}' AND '{}'
-                        GROUP BY Employee.empFName, Employee.empLName
+                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Employee ON CO.employeeID = Employee.employeeID
+                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                        GROUP BY Employee.empFName, Employee.empLName;
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
 
             if self.radioButton_8.isChecked() and self.radioButton_8.text() == "By Category":
                 if self.radioButton_14.isChecked():
                     query = """
-                        SELECT Categories.categoryName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        INNER JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE Sales.saleDate = CURRENT_DATE()
-                        GROUP BY Categories.categoryName
+                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        JOIN Categories ON Products.categoryID = Categories.categoryID
+                        WHERE CONVERT(DATE, CO.orderDate) = CURRENT_DATE()
+                        GROUP BY Categories.categoryName;
                     """
                 elif self.radioButton_10.isChecked():
                     query = """
-                        SELECT Categories.categoryName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        INNER JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE MONTH(Sales.saleDate) = MONTH(CURRENT_DATE()) AND YEAR(Sales.saleDate) = YEAR(CURRENT_DATE())
-                        GROUP BY Categories.categoryName
+                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        JOIN Categories ON Products.categoryID = Categories.categoryID
+                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                        GROUP BY Categories.categoryName;
                     """
                 elif self.radioButton_12.isChecked():
                     query = """
-                        SELECT Categories.categoryName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        INNER JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE YEAR(Sales.saleDate) = YEAR(CURRENT_DATE())
-                        GROUP BY Categories.categoryName
+                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        JOIN Categories ON Products.categoryID = Categories.categoryID
+                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                        GROUP BY Categories.categoryName;
                     """
                 elif self.radioButton_13.isChecked():
                     query = """
-                        SELECT Categories.categoryName, SUM(Sales.total)
-                        FROM Sales
-                        INNER JOIN Products ON Sales.productID = Products.productID
-                        INNER JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE Sales.saleDate BETWEEN '{}' AND '{}'
-                        GROUP BY Categories.categoryName
+                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        JOIN Products ON COD.productID = Products.productID
+                        JOIN Categories ON Products.categoryID = Categories.categoryID
+                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                        GROUP BY Categories.categoryName;
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
 
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Total Sales":
@@ -700,108 +716,111 @@ class Ui_MainWindow(object):
                         WHERE saleDate BETWEEN '{}' AND '{}'
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
 
-        elif self.radioButton_2.isChecked() == True:
-            if self.radioButton_9.isChecked() == True and self.radioButton_9.text() == "Cash Flow":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_7.isChecked() == True and self.radioButton_7.text() == "Profit":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_8.isChecked() == True and self.radioButton_8.text() == "Net Income":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-        elif self.radioButton_3.isChecked() == True:
-            if self.radioButton_5.isChecked() == True and self.radioButton_5.text() == "Total Customers":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_6.isChecked() == True and self.radioButton_6.text() == "New Customers":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_7.isChecked() == True and self.radioButton_7.text() == "Returning Customers":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_8.isChecked() == True and self.radioButton_8.text() == "Customer Loyalty":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(customerID) FROM Customers WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-        elif self.radioButton_4.isChecked() == True:
-            if self.radioButton_5.isChecked() == True and self.radioButton_5.text() == "All Products":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_6.isChecked() == True and self.radioButton_6.text() == "Product Categories":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(categoryID) FROM Categories WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(categoryID) FROM Categories WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(categoryID) FROM Categories WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(categoryID) FROM Categories WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_7.isChecked() == True and self.radioButton_7.text() == "Product Availability":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
-            elif self.radioButton_8.isChecked() == True and self.radioButton_8.text() == "Low Stock Alert":
-                if self.radioButton_14.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE dateAdded = CURRENT_DATE()"
-                elif self.radioButton_10.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE MONTH(dateAdded) = MONTH(CURRENT_DATE()) AND YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_12.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE YEAR(dateAdded) = YEAR(CURRENT_DATE())"
-                elif self.radioButton_13.isChecked() == True:
-                    query = "SELECT COUNT(productID) FROM Products WHERE dateAdded BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
+        elif self.radioButton_2.isChecked():
+            if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Cash Flow":
+                if self.radioButton_14.isChecked():
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE transactionDate = CURRENT_DATE()"
+                elif self.radioButton_10.isChecked():
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE MONTH(transactionDate) = MONTH(CURRENT_DATE()) AND YEAR(transactionDate) = YEAR(CURRENT_DATE())"
+                elif self.radioButton_12.isChecked():
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE YEAR(transactionDate) = YEAR(CURRENT_DATE())"
+                elif self.radioButton_13.isChecked():
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE transactionDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
+
+            elif self.radioButton_7.isChecked() and self.radioButton_7.text() == "Profit":
+                if self.radioButton_14.isChecked():
+                    query = """
+                        SELECT SUM(COD.quantity * (COD.salePrice - P.purchasePrice))
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        WHERE CO.orderDate = CURRENT_DATE()
+                    """
+                elif self.radioButton_10.isChecked():
+                    query = """
+                        SELECT SUM(COD.quantity * (COD.salePrice - P.purchasePrice))
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        WHERE MONTH(CO.orderDate) = MONTH(CURRENT_DATE()) AND YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                    """
+                elif self.radioButton_12.isChecked():
+                    query = """
+                        SELECT SUM(COD.quantity * (COD.salePrice - P.purchasePrice))
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        WHERE YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                    """
+                elif self.radioButton_13.isChecked():
+                    query = """
+                        SELECT SUM(COD.quantity * (COD.salePrice - P.purchasePrice))
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        WHERE CO.orderDate BETWEEN '{}' AND '{}'
+                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
+
+            elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Net Income":
+                if self.radioButton_14.isChecked():
+                    query = """
+                        SELECT (SUM(COD.quantity * (COD.salePrice - P.purchasePrice)) - 
+                                COALESCE(SUM(D.amount), 0)) AS netIncome
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        LEFT JOIN Discounts D ON CO.orderID = D.orderID
+                        WHERE CO.orderDate = CURRENT_DATE()
+                    """
+                elif self.radioButton_10.isChecked():
+                    query = """
+                        SELECT (SUM(COD.quantity * (COD.salePrice - P.purchasePrice)) - 
+                                COALESCE(SUM(D.amount), 0)) AS netIncome
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        LEFT JOIN Discounts D ON CO.orderID = D.orderID
+                        WHERE MONTH(CO.orderDate) = MONTH(CURRENT_DATE()) AND YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                    """
+                elif self.radioButton_12.isChecked():
+                    query = """
+                        SELECT (SUM(COD.quantity * (COD.salePrice - P.purchasePrice)) - 
+                                COALESCE(SUM(D.amount), 0)) AS netIncome
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        LEFT JOIN Discounts D ON CO.orderID = D.orderID
+                        WHERE YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                    """
+                elif self.radioButton_13.isChecked():
+                    query = """
+                        SELECT (SUM(COD.quantity * (COD.salePrice - P.purchasePrice)) - 
+                                COALESCE(SUM(D.amount), 0)) AS netIncome
+                        FROM Customer_Order_Details COD
+                        JOIN Products P ON COD.productID = P.productID
+                        JOIN Customer_Order CO ON COD.orderID = CO.orderID
+                        LEFT JOIN Discounts D ON CO.orderID = D.orderID
+                        WHERE CO.orderDate BETWEEN '{}' AND '{}'
+                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
+
+        elif self.radioButton_3.isChecked():
+            if self.radioButton_5.isChecked() and self.radioButton_5.text() == "Total Customers":
+                pass
+            elif self.radioButton_6.isChecked() and self.radioButton_6.text() == "New Customers":
+                pass
+            elif self.radioButton_7.isChecked() and self.radioButton_7.text() == "Returning Customers":
+                pass
+            elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Customer Loyalty":
+                pass
+        elif self.radioButton_4.isChecked():
+            if self.radioButton_5.isChecked() and self.radioButton_5.text() == "All Products":
+                pass
+            elif self.radioButton_6.isChecked() and self.radioButton_6.text() == "Product Categories":
+                pass
+            elif self.radioButton_7.isChecked() and self.radioButton_7.text() == "Product Availability":
+                pass
+            elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
+                pass
         
     def id(self):
         name = self.comboBox.currentText()
@@ -812,11 +831,11 @@ class Ui_MainWindow(object):
         id = self.db.execute_read_query(query)
         return id[0][0]
     def plot(self):
-        if self.radioButton_15.isChecked() == True:
+        if self.radioButton_15.isChecked():
             self.bar()
-        elif self.radioButton_11.isChecked() == True:
+        elif self.radioButton_11.isChecked():
             self.pie()
-        elif self.radioButton_17.isChecked() == True:
+        elif self.radioButton_17.isChecked():
             self.linechart()
     
     def bar(self):
