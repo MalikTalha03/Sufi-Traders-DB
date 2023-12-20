@@ -588,7 +588,7 @@ class Ui_MainWindow(object):
                         FROM Customer_Order CO
                         JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
                         JOIN Products ON COD.productID = Products.productID
-                        WHERE CONVERT(DATE, CO.orderDate) = CURRENT_DATE()
+                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
                         GROUP BY Products.productName;
                     """
                 elif self.radioButton_10.isChecked():
@@ -627,7 +627,7 @@ class Ui_MainWindow(object):
                         FROM Customer_Order CO
                         JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
                         JOIN Employee ON CO.employeeID = Employee.employeeID
-                        WHERE CONVERT(DATE, CO.orderDate) = CURRENT_DATE()
+                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
                         GROUP BY Employee.empFName, Employee.empLName;
                     """
                 elif self.radioButton_10.isChecked():
@@ -667,7 +667,7 @@ class Ui_MainWindow(object):
                         JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
                         JOIN Products ON COD.productID = Products.productID
                         JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE CONVERT(DATE, CO.orderDate) = CURRENT_DATE()
+                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
                         GROUP BY Categories.categoryName;
                     """
                 elif self.radioButton_10.isChecked():
@@ -704,26 +704,43 @@ class Ui_MainWindow(object):
 
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Total Sales":
                 if self.radioButton_14.isChecked():
-                    query = "SELECT SUM(total) FROM Sales WHERE saleDate = CURRENT_DATE()"
+                    query = """
+                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE();
+                    """
                 elif self.radioButton_10.isChecked():
-                    query = "SELECT SUM(total) FROM Sales WHERE MONTH(saleDate) = MONTH(CURRENT_DATE()) AND YEAR(saleDate) = YEAR(CURRENT_DATE())"
+                    query = """
+                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
+                    """
                 elif self.radioButton_12.isChecked():
-                    query = "SELECT SUM(total) FROM Sales WHERE YEAR(saleDate) = YEAR(CURRENT_DATE())"
+                    query = """
+                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
+                    """
                 elif self.radioButton_13.isChecked():
                     query = """
-                        SELECT SUM(total)
-                        FROM Sales
-                        WHERE saleDate BETWEEN '{}' AND '{}'
+                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
+                        FROM Customer_Order CO
+                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}';
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
-
+                
         elif self.radioButton_2.isChecked():
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Cash Flow":
                 if self.radioButton_14.isChecked():
-                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE transactionDate = CURRENT_DATE()"
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE transactionDate = GETDATE()"
                 elif self.radioButton_10.isChecked():
-                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE MONTH(transactionDate) = MONTH(CURRENT_DATE()) AND YEAR(transactionDate) = YEAR(CURRENT_DATE())"
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE MONTH(transactionDate) = MONTH(GETDATE()) AND YEAR(transactionDate) = YEAR(GETDATE())"
                 elif self.radioButton_12.isChecked():
-                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE YEAR(transactionDate) = YEAR(CURRENT_DATE())"
+                    query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE YEAR(transactionDate) = YEAR(GETDATE())"
                 elif self.radioButton_13.isChecked():
                     query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE transactionDate BETWEEN '" + self.dateEdit.text() + "' AND '" + self.dateEdit_2.text() + "'"
 
@@ -734,7 +751,7 @@ class Ui_MainWindow(object):
                         FROM Customer_Order_Details COD
                         JOIN Products P ON COD.productID = P.productID
                         JOIN Customer_Order CO ON COD.orderID = CO.orderID
-                        WHERE CO.orderDate = CURRENT_DATE()
+                        WHERE CO.orderDate = GETDATE()
                     """
                 elif self.radioButton_10.isChecked():
                     query = """
@@ -742,7 +759,7 @@ class Ui_MainWindow(object):
                         FROM Customer_Order_Details COD
                         JOIN Products P ON COD.productID = P.productID
                         JOIN Customer_Order CO ON COD.orderID = CO.orderID
-                        WHERE MONTH(CO.orderDate) = MONTH(CURRENT_DATE()) AND YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                        WHERE MONTH(CO.orderDate) = MONTH(GETDATE()) AND YEAR(CO.orderDate) = YEAR(GETDATE())
                     """
                 elif self.radioButton_12.isChecked():
                     query = """
@@ -750,7 +767,7 @@ class Ui_MainWindow(object):
                         FROM Customer_Order_Details COD
                         JOIN Products P ON COD.productID = P.productID
                         JOIN Customer_Order CO ON COD.orderID = CO.orderID
-                        WHERE YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                        WHERE YEAR(CO.orderDate) = YEAR(GETDATE())
                     """
                 elif self.radioButton_13.isChecked():
                     query = """
@@ -770,7 +787,7 @@ class Ui_MainWindow(object):
                         JOIN Products P ON COD.productID = P.productID
                         JOIN Customer_Order CO ON COD.orderID = CO.orderID
                         LEFT JOIN Discounts D ON CO.orderID = D.orderID
-                        WHERE CO.orderDate = CURRENT_DATE()
+                        WHERE CO.orderDate = GETDATE()
                     """
                 elif self.radioButton_10.isChecked():
                     query = """
@@ -780,7 +797,7 @@ class Ui_MainWindow(object):
                         JOIN Products P ON COD.productID = P.productID
                         JOIN Customer_Order CO ON COD.orderID = CO.orderID
                         LEFT JOIN Discounts D ON CO.orderID = D.orderID
-                        WHERE MONTH(CO.orderDate) = MONTH(CURRENT_DATE()) AND YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                        WHERE MONTH(CO.orderDate) = MONTH(GETDATE()) AND YEAR(CO.orderDate) = YEAR(GETDATE())
                     """
                 elif self.radioButton_12.isChecked():
                     query = """
@@ -790,7 +807,7 @@ class Ui_MainWindow(object):
                         JOIN Products P ON COD.productID = P.productID
                         JOIN Customer_Order CO ON COD.orderID = CO.orderID
                         LEFT JOIN Discounts D ON CO.orderID = D.orderID
-                        WHERE YEAR(CO.orderDate) = YEAR(CURRENT_DATE())
+                        WHERE YEAR(CO.orderDate) = YEAR(GETDATE())
                     """
                 elif self.radioButton_13.isChecked():
                     query = """
