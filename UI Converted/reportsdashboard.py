@@ -146,6 +146,7 @@ class Ui_MainWindow(object):
         self.radioButton_14.clicked.connect(self.today)
         self.radioButton_12.clicked.connect(self.year)
         self.radioButton_10.clicked.connect(self.month)
+        self.pushButton_2.clicked.connect(self.radiodata)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -661,46 +662,95 @@ class Ui_MainWindow(object):
 
             if self.radioButton_8.isChecked() and self.radioButton_8.text() == "By Category":
                 if self.radioButton_14.isChecked():
-                    query = """
-                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
-                        GROUP BY Categories.categoryName;
-                    """
+                    if self.comboBox.currentText() == "All Categories":
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
+                            GROUP BY Categories.categoryName;
+                        """
+                    else:
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
+                                AND Categories.categoryName = '{}'
+                            GROUP BY Categories.categoryName;
+                        """.format(self.comboBox.currentText())
                 elif self.radioButton_10.isChecked():
-                    query = """
-                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                        GROUP BY Categories.categoryName;
-                    """
+                    if self.comboBox.currentText() == "All Categories":
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                            GROUP BY Categories.categoryName;
+                        """
+                    else:
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                AND Categories.categoryName = '{}'
+                            GROUP BY Categories.categoryName;
+                        """.format(self.comboBox.currentText())
                 elif self.radioButton_12.isChecked():
-                    query = """
-                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                        GROUP BY Categories.categoryName;
-                    """
+                    if self.comboBox.currentText() == "All Categories":
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                            GROUP BY Categories.categoryName;
+                        """
+                    else:
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                AND Categories.categoryName = '{}'
+                            GROUP BY Categories.categoryName;
+                        """.format(self.comboBox.currentText())
                 elif self.radioButton_13.isChecked():
-                    query = """
-                        SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        JOIN Categories ON Products.categoryID = Categories.categoryID
-                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
-                        GROUP BY Categories.categoryName;
-                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                    if self.comboBox.currentText() == "All Categories":
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                            GROUP BY Categories.categoryName;
+                        """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                    else:
+                        query = """
+                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
+                            FROM Customer_Order CO
+                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN Products ON COD.productID = Products.productID
+                            JOIN Categories ON Products.categoryID = Categories.categoryID
+                            WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                AND Categories.categoryName = '{}'
+                            GROUP BY Categories.categoryName;
+                        """.format(self.dateEdit.text(), self.dateEdit_2.text(), self.comboBox.currentText())
 
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Total Sales":
                 if self.radioButton_14.isChecked():
@@ -838,6 +888,8 @@ class Ui_MainWindow(object):
                 pass
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
                 pass
+        data = self.db.execute_read_query(query)
+        print(data)
         
     def id(self):
         name = self.comboBox.currentText()
@@ -847,6 +899,7 @@ class Ui_MainWindow(object):
         query = "SELECT customerID FROM Customers WHERE custFName = '{}' AND custLName = '{}'".format(fname,lname)
         id = self.db.execute_read_query(query)
         return id[0][0]
+    
     def plot(self):
         if self.radioButton_15.isChecked():
             self.bar()
