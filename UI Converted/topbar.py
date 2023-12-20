@@ -284,30 +284,30 @@ class MenuBar(QtWidgets.QMenuBar):
         pass
 
     def refundorder(self):
-        from returns import Ui_Form
+        from returns import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
-        self.ui = Ui_Form()
+        self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
 
     def topSelling(self):
-        from topselling import Ui_Form
+        from topselling import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
-        self.ui = Ui_Form()
+        self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
 
     def sales(self):
-        from Reports import Ui_Form
+        from Reports import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
-        self.ui = Ui_Form()
+        self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
 
     def prodsale(self):
-        from productreport import Ui_Form
+        from productreport import Ui_MainWindow
         self.win = QtWidgets.QMainWindow()
-        self.ui = Ui_Form()
+        self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
 
