@@ -601,15 +601,19 @@ class Ui_MainWindow(object):
                                 LEFT JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    CO.customerID = 1
+                                    CO.customerID = '{}'
                                     AND CO.orderDate BETWEEN '{}' AND '{}'
                                 GROUP BY
                                     YEAR(CO.orderDate),
                                     MONTH(CO.orderDate)
                                 ORDER BY
                                     OrderYear,
-                                    OrderMonth;""".format(self.dateEdit.text(), self.dateEdit_2.text())
+                                    OrderMonth;""".format(self.id(),self.dateEdit.text(), self.dateEdit_2.text())
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
             if self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
+                self.radioButton_17.hide()
                 if self.radioButton_14.isChecked():
                     query = """
                         SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -619,6 +623,11 @@ class Ui_MainWindow(object):
                         WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
                         GROUP BY Products.productName;
                     """
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0]].append(row[1])
+    
                 elif self.radioButton_10.isChecked():
                     query = """
                         SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -629,6 +638,10 @@ class Ui_MainWindow(object):
                             AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                         GROUP BY Products.productName;
                     """
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0]].append(row[1])
                 elif self.radioButton_12.isChecked():
                     query = """
                         SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -638,6 +651,10 @@ class Ui_MainWindow(object):
                         WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                         GROUP BY Products.productName;
                     """
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0]].append(row[1])
                 elif self.radioButton_13.isChecked():
                     query = """
                         SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -647,8 +664,13 @@ class Ui_MainWindow(object):
                         WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
                         GROUP BY Products.productName;
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0]].append(row[1])
                 
             if self.radioButton_7.isChecked() and self.radioButton_7.text() == "By Employee":
+                self.radioButton_17.hide()
                 if self.radioButton_14.isChecked():
                     query = """
                         SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -658,6 +680,11 @@ class Ui_MainWindow(object):
                         WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
                         GROUP BY Employee.empFName, Employee.empLName;
                     """
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0] + " " + row[1]].append(row[2])
+
                 elif self.radioButton_10.isChecked():
                     query = """
                         SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -668,6 +695,10 @@ class Ui_MainWindow(object):
                             AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                         GROUP BY Employee.empFName, Employee.empLName;
                     """
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0] + " " + row[1]].append(row[2])
                 elif self.radioButton_12.isChecked():
                     query = """
                         SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -677,6 +708,10 @@ class Ui_MainWindow(object):
                         WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                         GROUP BY Employee.empFName, Employee.empLName;
                     """
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0] + " " + row[1]].append(row[2])
                 elif self.radioButton_13.isChecked():
                     query = """
                         SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -686,6 +721,10 @@ class Ui_MainWindow(object):
                         WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
                         GROUP BY Employee.empFName, Employee.empLName;
                     """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                    data = self.db.execute_read_query(query)
+                    if data is not None:
+                        for row in data:
+                            plotdata[row[0] + " " + row[1]].append(row[2])
 
             if self.radioButton_8.isChecked() and self.radioButton_8.text() == "By Category":
                 if self.radioButton_14.isChecked():
@@ -699,6 +738,10 @@ class Ui_MainWindow(object):
                             WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
                             GROUP BY Categories.categoryName;
                         """
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                     else:
                         query = """
                             SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -710,6 +753,10 @@ class Ui_MainWindow(object):
                                 AND Categories.categoryName = '{}'
                             GROUP BY Categories.categoryName;
                         """.format(self.comboBox.currentText())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                 elif self.radioButton_10.isChecked():
                     if self.comboBox.currentText() == "All Categories":
                         query = """
@@ -722,6 +769,10 @@ class Ui_MainWindow(object):
                                 AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                             GROUP BY Categories.categoryName;
                         """
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                     else:
                         query = """
                             SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -734,6 +785,10 @@ class Ui_MainWindow(object):
                                 AND Categories.categoryName = '{}'
                             GROUP BY Categories.categoryName;
                         """.format(self.comboBox.currentText())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                 elif self.radioButton_12.isChecked():
                     if self.comboBox.currentText() == "All Categories":
                         query = """
@@ -745,6 +800,10 @@ class Ui_MainWindow(object):
                             WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                             GROUP BY Categories.categoryName;
                         """
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                     else:
                         query = """
                             SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -756,6 +815,10 @@ class Ui_MainWindow(object):
                                 AND Categories.categoryName = '{}'
                             GROUP BY Categories.categoryName;
                         """.format(self.comboBox.currentText())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                 elif self.radioButton_13.isChecked():
                     if self.comboBox.currentText() == "All Categories":
                         query = """
@@ -767,6 +830,10 @@ class Ui_MainWindow(object):
                             WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
                             GROUP BY Categories.categoryName;
                         """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                     else:
                         query = """
                             SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -778,37 +845,10 @@ class Ui_MainWindow(object):
                                 AND Categories.categoryName = '{}'
                             GROUP BY Categories.categoryName;
                         """.format(self.dateEdit.text(), self.dateEdit_2.text(), self.comboBox.currentText())
-
-            if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Total Sales":
-                if self.radioButton_14.isChecked():
-                    query = """
-                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE();
-                    """
-                elif self.radioButton_10.isChecked():
-                    query = """
-                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
-                    """
-                elif self.radioButton_12.isChecked():
-                    query = """
-                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
-                    """
-                elif self.radioButton_13.isChecked():
-                    query = """
-                        SELECT SUM(COD.quantity * COD.salePrice) AS TotalSales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}';
-                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                plotdata[row[0]].append(row[1])
                 
         elif self.radioButton_2.isChecked():
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Cash Flow":
@@ -916,6 +956,8 @@ class Ui_MainWindow(object):
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
                 pass
         
+        self.plot(plotdata)
+        
         
     def id(self):
         name = self.comboBox.currentText()
@@ -935,23 +977,14 @@ class Ui_MainWindow(object):
         elif self.radioButton_17.isChecked():
             self.linechart(data)    
     def bar(self,data):
-        data_to_plot = []
-        if data[0][0] == None:
-            self.error("No Data")
-            return
+        x = []
+        y = []
         for i in range(len(data)):
-            print(data[i][0])
-            data_to_plot.append(data[i][0])
-            print(data_to_plot)
-            
-        if self.radioButton_14.isChecked():
-            plt.bar(range(len(data_to_plot)), data_to_plot, tick_label = ["12AM","1AM","2AM","3AM","4AM","5AM","6AM","7AM","8AM","9AM","10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM", "5PM","6PM","7PM","8PM","9PM","10PM","11PM"])
-        elif self.radioButton_10.isChecked():
-            plt.bar(range(len(data_to_plot)), data_to_plot, tick_label = ["1","2","3","4","5","6","7","8","9","10","11","12"])
-        elif self.radioButton_12.isChecked():
-            plt.bar(range(len(data_to_plot)), data_to_plot, tick_label = ["January","February","March","April","May","June","July","August","September","October","November","December"])
-        elif self.radioButton_13.isChecked():
-            plt.bar(range(len(data_to_plot)), data_to_plot)
+            x.append(list(data.keys())[i])
+            y.append(list(data.values())[i])
+        print(x)
+        print(y)
+        plt.bar(x,y)
         plt.show()
         
 
