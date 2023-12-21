@@ -1,5 +1,8 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from db import DatabaseManager
+import matplotlib.pyplot as plt
+from collections import defaultdict
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 class Ui_MainWindow(object):
     def __init__(self):
@@ -425,8 +428,15 @@ class Ui_MainWindow(object):
 
     def radiodata(self):
         query = ""
+        data = []
+        plotdata = defaultdict(list)
+        hour = [1,2,3,4,5,6,7,8,9,10,11,12]
+        days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,
+                15,16,17,18,19,20,21,22,23,24,25,26,
+                27,28,29,30,31]
+        months = [1,2,3,4,5,6,7,8,9,10,11,12]
         if self.radioButton.isChecked():
-            if self.radioButton_9.clicked == True and self.radioButton_9.text() == "Total Sales":
+            if self.radioButton_9.isChecked and self.radioButton_9.text() == "Total Sales":
                 if self.radioButton_14.isChecked():
                     query = """SELECT
                                     DATEPART(HOUR, CO.orderTime) AS OrderHour,
@@ -436,83 +446,82 @@ class Ui_MainWindow(object):
                                 JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    CONVERT(DATE, CO.orderDate) = '2023-12-04'
+                                    CONVERT(DATE, CO.orderDate) = CONVERT(DATE, GETDATE())  -- Compare only the date part
                                 GROUP BY
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
-                                    OrderHour;"""
+                                    OrderHour;
+                                """
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        if row[0] in hour:
+                            plotdata[row[0]].append(row[1])
+                        else:
+                            plotdata[row[0]].append(0)
+
                 elif self.radioButton_10.isChecked():
                     query = """SELECT
-                                    DATEPART(HOUR, CO.orderTime) AS OrderHour,
-                                    SUM(COD.quantity * COD.salePrice) AS HourlySales
+                                    DAY(CO.orderDate) AS OrderDay,
+                                    SUM(COD.quantity * COD.salePrice) AS DailySales
                                 FROM
                                     Customer_Order CO
                                 JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                                    AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                    YEAR(CO.orderDate) = YEAR(GETDATE())
+                                    AND MONTH(CO.orderDate) = MONTH(GETDATE())
                                 GROUP BY
-                                    DATEPART(HOUR, CO.orderTime)
+                                    DAY(CO.orderDate)
                                 ORDER BY
-                                    OrderHour;"""
+                                    OrderDay;"""
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        if row[0] in days:
+                            plotdata[row[0]].append(row[1])
+                        else:
+                            plotdata[row[0]].append(0)
+
                 elif self.radioButton_12.isChecked():
                     query = """ SELECT
-                                    YEAR(CONVERT(DATE, CO.orderDate)) AS OrderYear,
-                                    MONTH(CONVERT(DATE, CO.orderDate)) AS OrderMonth,
+                                    MONTH(CO.orderDate) AS OrderMonth,
                                     SUM(COD.quantity * COD.salePrice) AS MonthlySales
                                 FROM
                                     Customer_Order CO
                                 JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    YEAR(CO.orderDate) = YEAR(GETDATE())
                                 GROUP BY
-                                    YEAR(CONVERT(DATE, CO.orderDate)),
-                                    MONTH(CONVERT(DATE, CO.orderDate))
+                                    MONTH(CO.orderDate)
                                 ORDER BY
-                                    OrderYear, OrderMonth; """
+                                    OrderMonth; """
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        if row[0] in months:
+                            plotdata[row[0]].append(row[1])
+                        else:
+                            plotdata[row[0]].append(0)
                 elif self.radioButton_13.isChecked():
-                    query = """IF DATEDIFF(MONTH, @StartDate, @EndDate) > 1
-                                BEGIN
-                                    SELECT
-                                        Calendar.Year,
-                                        Calendar.MonthNumber,
-                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
-                                    FROM (
-                                        SELECT
-                                            YEAR(DATEADD(MONTH, number, @StartDate)) AS Year,
-                                            MONTH(DATEADD(MONTH, number, @StartDate)) AS MonthNumber
-                                        FROM master.dbo.spt_values
-                                        WHERE type = 'P'
-                                            AND number BETWEEN 0 AND DATEDIFF(MONTH, @StartDate, @EndDate)
-                                    ) Calendar
-                                    LEFT JOIN
-                                        Customer_Order CO ON Calendar.MonthNumber = MONTH(CONVERT(DATE, CO.orderDate))
-                                    LEFT JOIN
-                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
-                                    GROUP BY
-                                        Calendar.Year,
-                                        Calendar.MonthNumber
-                                    ORDER BY
-                                        Year, MonthNumber;
-                                END
-                                ELSE
-                                BEGIN
-                                    SELECT
-                                        CONVERT(DATE, CO.orderDate) AS OrderDate,
-                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
-                                    FROM
-                                        Customer_Order CO
-                                    LEFT JOIN
-                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
-                                    WHERE
-                                        CONVERT(DATE, CO.orderDate) BETWEEN @StartDate AND @EndDate
-                                    GROUP BY
-                                        CONVERT(DATE, CO.orderDate)
-                                    ORDER BY
-                                        OrderDate;
-                                END"""
+                    query = """SELECT
+                                    YEAR(CO.orderDate) AS OrderYear,
+                                    MONTH(CO.orderDate) AS OrderMonth,
+                                    SUM(COD.quantity * COD.salePrice) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.orderDate BETWEEN '{}' AND '{}'
+                                GROUP BY
+                                    YEAR(CO.orderDate),
+                                    MONTH(CO.orderDate)
+                                ORDER BY
+                                    OrderYear, OrderMonth;""".format(self.dateEdit.text(), self.dateEdit_2.text())
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
+                        self.radioButton_17.hide()
+                    print(plotdata)
             elif self.radioButton_5.isChecked() and self.radioButton_5.text() == "By Customer":
                 if self.radioButton_14.isChecked():
                     query = """ SELECT
@@ -529,6 +538,12 @@ class Ui_MainWindow(object):
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
                                     OrderHour;""".format(self.id())
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        if row[0] in hour:
+                            plotdata[row[0]].append(row[1])
+                        else:
+                            plotdata[row[0]].append(0)
                 elif self.radioButton_10.isChecked():
                     query = """SELECT
                                     CONVERT(DATE, CO.orderDate) AS OrderDate,
@@ -546,9 +561,15 @@ class Ui_MainWindow(object):
                                 ORDER BY
                                     OrderDate;
                                 """.format(self.id())
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        if row[0] in days:
+                            plotdata[row[0]].append(row[1])
+                        else:
+                            plotdata[row[0]].append(0)
+                            
                 elif self.radioButton_12.isChecked():
                     query = """SELECT
-                                    YEAR(CO.orderDate) AS OrderYear,
                                     MONTH(CO.orderDate) AS OrderMonth,
                                     ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
                                 FROM
@@ -559,11 +580,17 @@ class Ui_MainWindow(object):
                                     CO.customerID = '{}'
                                     AND YEAR(CO.orderDate) = YEAR(GETDATE())
                                 GROUP BY
-                                    YEAR(CO.orderDate),
                                     MONTH(CO.orderDate)
                                 ORDER BY
-                                    OrderYear,
-                                    OrderMonth;""".format(self.id())
+                                    OrderMonth;
+                                """.format(self.id())
+                    data = self.db.execute_read_query(query)
+                    for row in data:
+                        if row[0] in months:
+                            plotdata[row[0]].append(row[1])
+                        else:
+                            plotdata[row[0]].append(0)
+
                 elif self.radioButton_13.isChecked():
                     query = """SELECT
                                     YEAR(CO.orderDate) AS OrderYear,
@@ -888,8 +915,7 @@ class Ui_MainWindow(object):
                 pass
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
                 pass
-        data = self.db.execute_read_query(query)
-        print(data)
+        
         
     def id(self):
         name = self.comboBox.currentText()
@@ -900,22 +926,56 @@ class Ui_MainWindow(object):
         id = self.db.execute_read_query(query)
         return id[0][0]
     
-    def plot(self):
+    def plot(self,data):
+        print("plot")
         if self.radioButton_15.isChecked():
-            self.bar()
+            self.bar(data)
         elif self.radioButton_11.isChecked():
-            self.pie()
+            self.pie(data)
         elif self.radioButton_17.isChecked():
-            self.linechart()
-    
-    def bar(self):
-        pass
+            self.linechart(data)    
+    def bar(self,data):
+        data_to_plot = []
+        if data[0][0] == None:
+            self.error("No Data")
+            return
+        for i in range(len(data)):
+            print(data[i][0])
+            data_to_plot.append(data[i][0])
+            print(data_to_plot)
+            
+        if self.radioButton_14.isChecked():
+            plt.bar(range(len(data_to_plot)), data_to_plot, tick_label = ["12AM","1AM","2AM","3AM","4AM","5AM","6AM","7AM","8AM","9AM","10AM", "11AM", "12PM", "1PM", "2PM", "3PM", "4PM", "5PM","6PM","7PM","8PM","9PM","10PM","11PM"])
+        elif self.radioButton_10.isChecked():
+            plt.bar(range(len(data_to_plot)), data_to_plot, tick_label = ["1","2","3","4","5","6","7","8","9","10","11","12"])
+        elif self.radioButton_12.isChecked():
+            plt.bar(range(len(data_to_plot)), data_to_plot, tick_label = ["January","February","March","April","May","June","July","August","September","October","November","December"])
+        elif self.radioButton_13.isChecked():
+            plt.bar(range(len(data_to_plot)), data_to_plot)
+        plt.show()
+        
 
-    def pie(self):
-        pass
+    def pie(self,data):
+        data_to_plot = []
+        for i in range(len(data)):
+            data_to_plot.append(data[i][1])
+        plt.pie(data_to_plot)
+        plt.show()
 
-    def linechart(self):
-        pass
+    def linechart(self,data):
+        data_to_plot = []
+        for i in range(len(data)):
+            data_to_plot.append(data[i][1])
+        plt.plot(data_to_plot)
+        plt.show()
+
+    def error(self,message):
+        from PyQt6.QtWidgets import QMessageBox
+        msg = QMessageBox()
+        msg.setWindowTitle("Error")
+        msg.setText(message)
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.exec()
 
 
 
