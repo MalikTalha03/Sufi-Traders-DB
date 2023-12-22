@@ -1,13 +1,11 @@
-SELECT
-                                    DATEPART(HOUR, CO.orderTime) AS OrderHour,
-                                    SUM(COD.quantity * COD.salePrice) AS HourlySales
-                                FROM
-                                    Customer_Order CO
-                                JOIN
-                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
-                                WHERE
-                                    CONVERT(DATE, CO.orderDate) = 'GETDATE()'
-                                GROUP BY
-                                    DATEPART(HOUR, CO.orderTime)
-                                ORDER BY
-                                    OrderHour;
+SELECT DISTINCT
+                            Employee.employeeID,
+                            Employee.empFName,
+                            Employee.empLName
+                        FROM
+                            Customer_Order CO
+                        JOIN
+                            Employee ON CO.employeeID = Employee.employeeID
+                        WHERE
+                            MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
