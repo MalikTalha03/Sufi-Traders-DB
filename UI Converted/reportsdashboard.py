@@ -429,6 +429,9 @@ class Ui_MainWindow(object):
     def radiodata(self):
         query = ""
         data = []
+        names=[]
+        ids=[]
+        markings = []
         plotdata = defaultdict(list)
         hours = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
         days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,
@@ -436,7 +439,7 @@ class Ui_MainWindow(object):
                 27,28,29,30,31]
         months = [1,2,3,4,5,6,7,8,9,10,11,12]
         if self.radioButton.isChecked():
-            if self.radioButton_9.isChecked and self.radioButton_9.text() == "Total Sales":
+            if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Total Sales":
                 if self.radioButton_14.isChecked():
                     query = """SELECT
                                     DATEPART(HOUR, CO.orderTime) AS OrderHour,
@@ -555,27 +558,26 @@ class Ui_MainWindow(object):
 
                 elif self.radioButton_10.isChecked():
                     query = """SELECT
-                                    CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                    DAY(CO.orderDate) AS OrderDay,
                                     ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
                                 FROM
                                     Customer_Order CO
                                 LEFT JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    CO.customerID = '{}'
-                                    AND MONTH(CO.orderDate) = MONTH(GETDATE())
-                                    AND YEAR(CO.orderDate) = YEAR(GETDATE())
+                                    CO.customerID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                        AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
                                 GROUP BY
-                                    CONVERT(DATE, CO.orderDate)
+                                    DAY(CO.orderDate)
                                 ORDER BY
-                                    OrderDate;
-                                """.format(self.id())
+                                    OrderDay;""".format(self.id())
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        plotdata[row[0].day].append(row[1])
+                        plotdata[row[0]].append(row[1])
                     for day in days:
                         if day not in plotdata:
                             plotdata[day].append(0)
+                    print(plotdata)
                     plotdata = dict(sorted(plotdata.items()))
                             
                 elif self.radioButton_12.isChecked():
@@ -623,318 +625,1041 @@ class Ui_MainWindow(object):
                     data = self.db.execute_read_query(query)
                     for row in data:
                         plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
-            
-            if self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
-                self.radioButton_17.hide()
-                names=[]
-                ids=[]
-                if self.radioButton_14.isChecked():
-                    query = """
-                        SELECT DISTINCT
-                            Employee.employeeID,
-                            Employee.empFName,
-                            Employee.empLName
-                        FROM 
-                            Customer_Order CO
-                        JOIN 
-                            Employee ON CO.employeeID = Employee.employeeID
-                        WHERE 
-                            CONVERT(DATE, CO.orderDate) = GETDATE();
-                    """
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            names.append(row[1] + " " + row[2])
-                            ids.append(row[0])
-                    else:
-                        self.error("No data found for this date")
-                    for id in ids:
+            elif self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
+                if self.comboBox.currentText() == "All Products":
+                    if self.radioButton_14.isChecked():
+                        query = """SELECT DISTINCT
+                                        Products.productID,
+                                        Products.productName
+                                    FROM
+                                        Customer_Order CO
+                                    JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    JOIN
+                                        Products ON COD.productID = Products.productID
+                                    WHERE
+                                        CONVERT(DATE, CO.orderDate) = GETDATE();"""
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date")
+                        for id in ids:
+                            query = """SELECT
+                                            DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = '{}' AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                        GROUP BY
+                                            DATEPART(HOUR, CO.orderTime)
+                                        ORDER BY
+                                            OrderHour;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for hour in hours:
+                                if hour not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+
+                    elif self.radioButton_10.isChecked():
+                        query = """SELECT DISTINCT
+                                        Products.productID,
+                                        Products.productName
+                                    FROM
+                                        Customer_Order CO
+                                    JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    JOIN
+                                        Products ON COD.productID = Products.productID
+                                    WHERE
+                                        MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());"""
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this month")
+                        for id in ids:
+                            query = """SELECT
+                                            DAY(CO.orderDate) AS OrderDay,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                        GROUP BY
+                                            DAY(CO.orderDate)
+                                        ORDER BY
+                                            OrderDay;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                                
+                    elif self.radioButton_12.isChecked():
+                        query = """SELECT DISTINCT
+                                        Products.productID,
+                                        Products.productName
+                                    FROM
+                                        Customer_Order CO
+                                    JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    JOIN
+                                        Products ON COD.productID = Products.productID
+                                    WHERE
+                                        YEAR(CO.orderDate) = YEAR(GETDATE());"""
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this year")
+                        for id in ids:
+                            query = """SELECT
+                                            MONTH(CO.orderDate) AS OrderMonth,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = '{}'
+                                            AND YEAR(CO.orderDate) = YEAR(GETDATE())
+                                        GROUP BY
+                                            MONTH(CO.orderDate)
+                                        ORDER BY
+                                            OrderMonth;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for month in months:
+                                if month not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+
+                    elif self.radioButton_13.isChecked():
+                        query = """SELECT DISTINCT
+                                        Products.productID,
+                                        Products.productName
+                                    FROM
+                                        Customer_Order CO
+                                    JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    JOIN
+                                        Products ON COD.productID = Products.productID
+                                    WHERE
+                                        CO.orderDate BETWEEN '{}' AND '{}';""".format(self.dateEdit.text(), self.dateEdit_2.text())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date range")
+                        for id in ids:
+                            query = """SELECT
+                                            YEAR(CO.orderDate) AS OrderYear,
+                                            MONTH(CO.orderDate) AS OrderMonth,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = '{}'
+                                            AND CO.orderDate BETWEEN '{}' AND '{}'
+                                        GROUP BY
+                                            YEAR(CO.orderDate),
+                                            MONTH(CO.orderDate)
+                                        ORDER BY
+                                            OrderYear,
+                                            OrderMonth;""".format(id,self.dateEdit.text(), self.dateEdit_2.text())
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2])
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                else:
+                    if self.radioButton_14.isChecked():
                         query = """SELECT
                                         DATEPART(HOUR, CO.orderTime) AS OrderHour,
-                                        SUM(COD.quantity * COD.salePrice) AS HourlySales
-                                    FROM 
+                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                    FROM
                                         Customer_Order CO
-                                    JOIN 
+                                    LEFT JOIN
                                         Customer_Order_Details COD ON CO.orderID = COD.orderID
-                                    WHERE 
-                                        CONVERT(DATE, CO.orderDate) = GETDATE()
-                                        AND CO.employeeID = '{}'
-                                    GROUP BY 
+                                    WHERE
+                                        COD.productID = '{}'
+                                        AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                    GROUP BY
                                         DATEPART(HOUR, CO.orderTime)
-                                    ORDER BY 
-                                        OrderHour;
-                                    """.format(id)
+                                    ORDER BY
+                                        OrderHour;""".format(self.id())
                         data = self.db.execute_read_query(query)
                         for row in data:
-                            plotdata[names[ids.index(id)]].append(row[1])
+                            plotdata[row[0]].append(row[1])
                         for hour in hours:
-                            if hour not in plotdata[names[ids.index(id)]]:
-                                plotdata[names[ids.index(id)]].append(0)
-                        # add names as markings
-                        markings = [names[ids.index(id)] for id in ids]
+                            if hour not in plotdata:
+                                plotdata[hour].append(0)
                         plotdata = dict(sorted(plotdata.items()))
-                        print(plotdata)
-    
-                elif self.radioButton_10.isChecked():
-                    query = """
-                        SELECT DISTINCT
-                            Employee.employeeID,
-                            Employee.empFName,
-                            Employee.empLName
-                        FROM
-                            Customer_Order CO
-                        JOIN
-                            Employee ON CO.employeeID = Employee.employeeID
-                        WHERE
-                            MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
-                    """
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
+
+                    elif self.radioButton_10.isChecked():
+                        query = """SELECT
+                                        DAY(CO.orderDate) AS OrderDay,
+                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                    FROM
+                                        Customer_Order CO
+                                    LEFT JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    WHERE
+                                        COD.productID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    GROUP BY
+                                        DAY(CO.orderDate)
+                                    ORDER BY
+                                        OrderDay;""".format(self.id())
+                        data = self.db.execute_read_query(query)
                         for row in data:
-                            names.append(row[1] + " " + row[2])
-                            ids.append(row[0])
-                    else:
-                        self.error("No data found for this month")
-                    for id in ids:
+                            plotdata[row[0]].append(row[1])
+                        for day in days:
+                            if day not in plotdata:
+                                plotdata[day].append(0)
+                        plotdata = dict(sorted(plotdata.items()))
+                                
+                    elif self.radioButton_12.isChecked():
+                        query = """SELECT
+                                        MONTH(CO.orderDate) AS OrderMonth,
+                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                    FROM
+                                        Customer_Order CO
+                                    LEFT JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    WHERE
+                                        COD.productID = '{}'
+                                        AND YEAR(CO.orderDate) = YEAR(GETDATE())
+                                    GROUP BY
+                                        MONTH(CO.orderDate
+                                    ORDER BY
+                                        Order
+                                    """.format(self.id())
+                        data = self.db.execute_read_query(query)
+                        for row in data:
+                            plotdata[row[0]].append(row[1])
+                        for month in months:
+                            if month not in plotdata:
+                                plotdata[month].append(0)
+                        plotdata = dict(sorted(plotdata.items()))
+
+                    elif self.radioButton_13.isChecked():
+                        query = """SELECT
+                                        YEAR(CO.orderDate) AS OrderYear,
+                                        MONTH(CO.orderDate) AS OrderMonth,
+                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                    FROM
+                                        Customer_Order CO
+                                    LEFT JOIN
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    WHERE
+                                        COD.productID = '{}'
+                                        AND CO.orderDate BETWEEN '{}' AND '{}'
+                                    GROUP BY
+                                        YEAR(CO.orderDate),
+                                        MONTH(CO.orderDate)
+                                    ORDER BY
+                                        OrderYear,
+                                        OrderMonth;""".format(self.id(),self.dateEdit.text(), self.dateEdit_2.text())
+                        data = self.db.execute_read_query(query)
+                        for row in data:
+                            plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2])
+                            
+            elif self.radioButton_7.isChecked() and self.radioButton_7.text() == "By Employee":
+                if self.comboBox.currentText() == "All Employees":
+                    if self.radioButton_14.isChecked():
                         query = """
-                            SELECT
-                                DAY(CO.orderDate) AS OrderDay,
-                                SUM(COD.quantity * COD.salePrice) AS DailySales
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
                             FROM
                                 Customer_Order CO
                             JOIN
                                 Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) = GETDATE();
+                        """
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date")
+                        for id in ids:
+                            query = """SELECT
+                                            DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            CO.employeeID = '{}' AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                        GROUP BY
+                                            DATEPART(HOUR, CO.orderTime)
+                                        ORDER BY
+                                            OrderHour;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for hour in hours:
+                                if hour not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print("plot data ",plotdata)
+                            print("markings ", markings)
+
+                    elif self.radioButton_10.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                    AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());"""
+                        
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this month")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    DAY(CO.orderDate) AS OrderDay,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.employeeID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                        AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    DAY(CO.orderDate)
+                                ORDER BY
+                                    OrderDay;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+                    elif self.radioButton_12.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());"""
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this year")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    MONTH(CO.orderDate) AS OrderMonth,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.employeeID = '{}' AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    MONTH(CO.orderDate)
+                                ORDER BY
+                                    OrderMonth;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for month in months:
+                                if month not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+                    elif self.radioButton_13.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}';""".format(self.dateEdit.text(), self.dateEdit_2.text())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date range")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.employeeID = '{}' AND CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                GROUP BY
+                                    CONVERT(DATE, CO.orderDate)
+                                ORDER BY
+                                    OrderDate;""".format(id, self.dateEdit.text(), self.dateEdit_2.text())
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+                elif self.comboBox.currentText() != "All Employees":
+                    if self.radioButton_14.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) = GETDATE()
+                                    AND Employee.empFName = '{}'
+                                    AND Employee.empLName = '{}';
+                        """.format(self.comboBox.currentText().split()[0], self.comboBox.currentText().split()[1])
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date")
+                        for id in ids:
+                            query = """SELECT
+                                            DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            CO.employeeID = '{}' AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                        GROUP BY
+                                            DATEPART(HOUR, CO.orderTime)
+                                        ORDER BY
+                                            OrderHour;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for hour in hours:
+                                if hour not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+
+                    elif self.radioButton_10.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
                             WHERE
                                 MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
                                     AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                                    AND CO.employeeID = '{}'
-                            GROUP BY
-                                DAY(CO.orderDate)
-                            ORDER BY
-                                OrderDay;
-                        """.format(id)
+                                    AND Employee.empFName = '{}'
+                                    AND Employee.empLName = '{}';""".format(self.comboBox.currentText().split()[0], self.comboBox.currentText().split()[1])
+                        
                         data = self.db.execute_read_query(query)
-                        for row in data:
-                            plotdata[names[ids.index(id)]].append(row[1])
-                        for day in days:
-                            if day not in plotdata[names[ids.index(id)]]:
-                                plotdata[names[ids.index(id)]].append(0)
-                        # add names as markings
-                        markings = [names[ids.index(id)] for id in ids]
-                        plotdata = dict(sorted(plotdata.items()))
-                        print(plotdata)
-                    
-
-                elif self.radioButton_12.isChecked():
-                    query = """
-                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                        GROUP BY Products.productName;
-                    """
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            plotdata[row[0]].append(row[1])
-                elif self.radioButton_13.isChecked():
-                    query = """
-                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
-                        GROUP BY Products.productName;
-                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            plotdata[row[0]].append(row[1])
-                
-            if self.radioButton_7.isChecked() and self.radioButton_7.text() == "By Employee":
-                self.radioButton_17.hide()
-                if self.radioButton_14.isChecked():
-                    query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Employee ON CO.employeeID = Employee.employeeID
-                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
-                        GROUP BY Employee.empFName, Employee.empLName;
-                    """
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            plotdata[row[0] + " " + row[1]].append(row[2])
-
-                elif self.radioButton_10.isChecked():
-                    query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Employee ON CO.employeeID = Employee.employeeID
-                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                        GROUP BY Employee.empFName, Employee.empLName;
-                    """
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            plotdata[row[0] + " " + row[1]].append(row[2])
-                elif self.radioButton_12.isChecked():
-                    query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Employee ON CO.employeeID = Employee.employeeID
-                        WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                        GROUP BY Employee.empFName, Employee.empLName;
-                    """
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            key = row[0] + " " + row[1]
-                            plotdata[key].append(row[2])
-                elif self.radioButton_13.isChecked():
-                    query = """
-                        SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Employee ON CO.employeeID = Employee.employeeID
-                        WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
-                        GROUP BY Employee.empFName, Employee.empLName;
-                    """.format(self.dateEdit.text(), self.dateEdit_2.text())
-                    data = self.db.execute_read_query(query)
-                    if data is not None:
-                        for row in data:
-                            plotdata[row[0] + " " + row[1]].append(row[2])
-
-            if self.radioButton_8.isChecked() and self.radioButton_8.text() == "By Category":
-                if self.radioButton_14.isChecked():
-                    if self.comboBox.currentText() == "All Categories":
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this month")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    DAY(CO.orderDate) AS OrderDay,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.employeeID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                        AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    DAY(CO.orderDate)
+                                ORDER BY
+                                    OrderDay;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+                    elif self.radioButton_12.isChecked():
                         query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
-                            GROUP BY Categories.categoryName;
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    AND Employee.empFName = '{}'
+                                    AND Employee.empLName = '{}';""".format(self.comboBox.currentText().split()[0], self.comboBox.currentText().split()[1])
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this year")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    MONTH(CO.orderDate) AS OrderMonth,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.employeeID = '{}' AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    MONTH(CO.orderDate)
+                                ORDER BY
+                                    OrderMonth;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for month in months:
+                                if month not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+                    elif self.radioButton_13.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Employee.employeeID,
+                                Employee.empFName,
+                                Employee.empLName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Employee ON CO.employeeID = Employee.employeeID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                    AND Employee.empFName = '{}'
+                                    AND Employee.empLName = '{}';""".format(self.dateEdit.text(), self.dateEdit_2.text(), self.comboBox.currentText().split()[0], self.comboBox.currentText().split()[1])
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1] + " " + row[2])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date range")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    CO.employeeID = '{}' AND CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                GROUP BY
+                                    CONVERT(DATE, CO.orderDate)
+                                ORDER BY
+                                    OrderDate;""".format(id, self.dateEdit.text(), self.dateEdit_2.text())
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+                            print(plotdata)
+            elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "By Category":
+                if self.comboBox.currentText() == "All Categories":
+                    if self.radioButton_14.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) = GETDATE();
                         """
                         data = self.db.execute_read_query(query)
                         if data is not None:
                             for row in data:
-                                plotdata[row[0]].append(row[1])
-                    else:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date")
+                        for id in ids:
+                            query = """SELECT
+                                            DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = '{}' AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                        GROUP BY
+                                            DATEPART(HOUR, CO.orderTime)
+                                        ORDER BY
+                                            OrderHour;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for hour in hours:
+                                if hour not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+
+                    elif self.radioButton_10.isChecked():
                         query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
-                                AND Categories.categoryName = '{}'
-                            GROUP BY Categories.categoryName;
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            WHERE
+                                MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                    AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());"""
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this month")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    DAY(CO.orderDate) AS OrderDay,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    COD.productID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                        AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    DAY(CO.orderDate)
+                                ORDER BY
+                                    OrderDay;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+
+                    elif self.radioButton_12.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            WHERE
+                                YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());"""
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this year")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    MONTH(CO.orderDate) AS OrderMonth,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    COD.productID = '{}' AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    MONTH(CO.orderDate)
+                                ORDER BY
+                                    OrderMonth;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for month in months:
+                                if month not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+
+                    elif self.radioButton_13.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}';""".format(self.dateEdit.text(), self.dateEdit_2.text())
+                        data = self.db.execute_read_query(query)
+                        if data is not None:
+                            for row in data:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date range")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    COD.productID = '{}' AND CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                GROUP BY
+                                    CONVERT(DATE, CO.orderDate)
+                                ORDER BY
+                                    OrderDate;""".format(id, self.dateEdit.text(), self.dateEdit_2.text())
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+                            plotdata = dict(sorted(plotdata.items()))
+
+                elif self.comboBox.currentText() != "All Categories":
+                    if self.radioButton_14.isChecked():
+                        query = """
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            JOIN
+                                Product_Category ON Products.categoryID = Product_Category.categoryID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) = GETDATE()
+                                    AND Product_Category.categoryName = '{}';
                         """.format(self.comboBox.currentText())
                         data = self.db.execute_read_query(query)
                         if data is not None:
                             for row in data:
-                                plotdata[row[0]].append(row[1])
-                elif self.radioButton_10.isChecked():
-                    if self.comboBox.currentText() == "All Categories":
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date")
+                        for id in ids:
+                            query = """SELECT
+                                            DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = '{}' AND CONVERT(DATE, CO.orderDate) = GETDATE()
+                                        GROUP BY
+                                            DATEPART(HOUR, CO.orderTime)
+                                        ORDER BY
+                                            OrderHour;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for hour in hours:
+                                if hour not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+
+                    elif self.radioButton_10.isChecked():
                         query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                            GROUP BY Categories.categoryName;
-                        """
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            JOIN
+                                Product_Category ON Products.categoryID = Product_Category.categoryID
+                            WHERE
+                                MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                    AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    AND Product_Category.categoryName
+                                        = '{}';""".format(self.comboBox.currentText())
+                        
                         data = self.db.execute_read_query(query)
                         if data is not None:
                             for row in data:
-                                plotdata[row[0]].append(row[1])
-                    else:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this month")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    DAY(CO.orderDate) AS OrderDay,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    COD.productID = '{}' AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                        AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    DAY(CO.orderDate)
+                                ORDER BY
+                                    OrderDay;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+
+                    elif self.radioButton_12.isChecked():
                         query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                                AND Categories.categoryName = '{}'
-                            GROUP BY Categories.categoryName;
-                        """.format(self.comboBox.currentText())
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            JOIN
+                                Product_Category ON Products.categoryID = Product_Category.categoryID
+                            WHERE
+                                YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    AND Product_Category.categoryName = '{}';""".format(self.comboBox.currentText())
                         data = self.db.execute_read_query(query)
                         if data is not None:
                             for row in data:
-                                plotdata[row[0]].append(row[1])
-                elif self.radioButton_12.isChecked():
-                    if self.comboBox.currentText() == "All Categories":
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this year")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    MONTH(CO.orderDate) AS OrderMonth,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS MonthlySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    COD.productID = '{}' AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                GROUP BY
+                                    MONTH(CO.orderDate)
+                                ORDER BY
+                                    OrderMonth;""".format(id)
+                            data = self.db.execute_read_query(query)
+                            for row in data:
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for month in months:
+                                if month not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+
+                    elif self.radioButton_13.isChecked():
                         query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                            GROUP BY Categories.categoryName;
-                        """
+                            SELECT DISTINCT
+                                Products.productID,
+                                Products.productName
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            JOIN
+                                Products ON COD.productID = Products.productID
+                            JOIN
+                                Product_Category ON Products.categoryID = Product_Category.categoryID
+                            WHERE
+                                CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                    AND Product_Category.categoryName = '{}';""".format(self.dateEdit.text(), self.dateEdit_2.text(), self.comboBox.currentText())
                         data = self.db.execute_read_query(query)
                         if data is not None:
                             for row in data:
-                                plotdata[row[0]].append(row[1])
-                    else:
-                        query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                                AND Categories.categoryName = '{}'
-                            GROUP BY Categories.categoryName;
-                        """.format(self.comboBox.currentText())
-                        data = self.db.execute_read_query(query)
-                        if data is not None:
+                                names.append(row[1])
+                                ids.append(row[0])
+                        else:
+                            self.error("No data found for this date range")
+                        for id in ids:
+                            query = """
+                                SELECT
+                                    CONVERT(DATE, CO.orderDate) AS OrderDate,
+                                    ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                FROM
+                                    Customer_Order CO
+                                LEFT JOIN
+                                    Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                WHERE
+                                    COD.productID = '{}' AND CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
+                                GROUP BY
+                                    CONVERT(DATE, CO.orderDate)
+                                ORDER BY
+                                    OrderDate;""".format(id, self.dateEdit.text(), self.dateEdit_2.text())
+                            data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[row[0]].append(row[1])
-                elif self.radioButton_13.isChecked():
-                    if self.comboBox.currentText() == "All Categories":
-                        query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
-                            GROUP BY Categories.categoryName;
-                        """.format(self.dateEdit.text(), self.dateEdit_2.text())
-                        data = self.db.execute_read_query(query)
-                        if data is not None:
-                            for row in data:
-                                plotdata[row[0]].append(row[1])
-                    else:
-                        query = """
-                            SELECT Categories.categoryName, SUM(COD.quantity * COD.salePrice) AS Sales
-                            FROM Customer_Order CO
-                            JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                            JOIN Products ON COD.productID = Products.productID
-                            JOIN Categories ON Products.categoryID = Categories.categoryID
-                            WHERE CONVERT(DATE, CO.orderDate) BETWEEN '{}' AND '{}'
-                                AND Categories.categoryName = '{}'
-                            GROUP BY Categories.categoryName;
-                        """.format(self.dateEdit.text(), self.dateEdit_2.text(), self.comboBox.currentText())
-                        data = self.db.execute_read_query(query)
-                        if data is not None:
-                            for row in data:
-                                plotdata[row[0]].append(row[1])
-                
+                                plotdata[names[ids.index(id)]].append(row[1])
+                            for day in days:
+                                if day not in plotdata[names[ids.index(id)]]:
+                                    plotdata[names[ids.index(id)]].append(0)
+                            # add names as markings
+                            markings = [names[ids.index(id)] for id in ids]
+
         elif self.radioButton_2.isChecked():
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Cash Flow":
                 if self.radioButton_14.isChecked():
@@ -1040,32 +1765,59 @@ class Ui_MainWindow(object):
                 pass
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
                 pass
-        self.plot(plotdata)
+        if markings == []:
+            self.plot(plotdata)
+        else:
+            self.plot(plotdata,markings)
         
         
     def id(self):
         name = self.comboBox.currentText()
-        name = name.split()
-        fname = name[0]
-        lname = name[1]
-        query = "SELECT customerID FROM Customers WHERE custFName = '{}' AND custLName = '{}'".format(fname,lname)
+        if self.label_4.text() == "Employee Name":
+            fname = name.split()[0]
+            lname = name.split()[1]
+            query = "SELECT employeeID FROM Employee WHERE empFName = '{}' AND empLName = '{}'".format(fname,lname)
+        elif self.label_4.text() == "Customer Name":
+            fname = name.split()[0]
+            lname = name.split()[1]
+            query = "SELECT customerID FROM Customers WHERE custFName = '{}' AND custLName = '{}'".format(fname,lname)
+        elif self.label_4.text() == "Product Name":
+            query = "SELECT productID FROM Products WHERE productName = '{}'".format(name)
+        elif self.label_4.text() == "Category Name":
+            query = "SELECT categoryID FROM Product_Category WHERE categoryName = '{}'".format(name)
         id = self.db.execute_read_query(query)
-        return id[0][0]
+        
+        if id is not None:
+            return id[0][0]
+        else:
+            self.error("No ID found for this name")
     
-    def plot(self,data):
+    def plot(self,data,markings=None):
         print("plot")
-        if self.radioButton_15.isChecked():
-            self.bar(data)
-        elif self.radioButton_11.isChecked():
-            self.pie(data)
-        elif self.radioButton_17.isChecked():
-            self.linechart(data)    
-    def bar(self,data):
+        if markings is not None:
+            if self.radioButton_15.isChecked():
+                self.bar(data,markings)
+            elif self.radioButton_11.isChecked():
+                self.pie(data,markings)
+            elif self.radioButton_17.isChecked():
+                self.linechart(data,markings)
+        else:
+            if self.radioButton_15.isChecked():
+                self.bar(data)
+            elif self.radioButton_11.isChecked():
+                self.pie(data)
+            elif self.radioButton_17.isChecked():
+                self.linechart(data)    
+    def bar(self,data,markings=None):
+        
         x = list(data.keys())
         y = [item[0] for item in data.values()]
-        print(x)
-        print(y)
-        plt.bar(x,y)
+        
+        if markings == []:
+            plt.bar(x,y)
+            
+        else:
+            plt.bar(x,y,tick_label=markings)
         plt.show()
         
 
