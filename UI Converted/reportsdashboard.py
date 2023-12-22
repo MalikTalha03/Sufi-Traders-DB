@@ -430,7 +430,7 @@ class Ui_MainWindow(object):
         query = ""
         data = []
         plotdata = defaultdict(list)
-        hour = [1,2,3,4,5,6,7,8,9,10,11,12]
+        hours = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
         days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,
                 15,16,17,18,19,20,21,22,23,24,25,26,
                 27,28,29,30,31]
@@ -446,7 +446,7 @@ class Ui_MainWindow(object):
                                 JOIN
                                     Customer_Order_Details COD ON CO.orderID = COD.orderID
                                 WHERE
-                                    CONVERT(DATE, CO.orderDate) = CONVERT(DATE, GETDATE())  -- Compare only the date part
+                                    CONVERT(DATE, CO.orderDate) = CONVERT(DATE, GETDATE())  
                                 GROUP BY
                                     DATEPART(HOUR, CO.orderTime)
                                 ORDER BY
@@ -454,10 +454,12 @@ class Ui_MainWindow(object):
                                 """
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        if row[0] in hour:
-                            plotdata[row[0]].append(row[1])
-                        else:
-                            plotdata[row[0]].append(0)
+                        hour = row[0]
+                        plotdata[hour].append(row[1])
+                    for hour in hours:
+                        if hour not in plotdata:
+                            plotdata[hour].append(0)
+                    plotdata = dict(sorted(plotdata.items()))
 
                 elif self.radioButton_10.isChecked():
                     query = """SELECT
@@ -476,10 +478,12 @@ class Ui_MainWindow(object):
                                     OrderDay;"""
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        if row[0] in days:
-                            plotdata[row[0]].append(row[1])
-                        else:
-                            plotdata[row[0]].append(0)
+                        day = row[0]
+                        plotdata[day].append(row[1])
+                    for day in days:
+                        if day not in plotdata:
+                            plotdata[day].append(0)
+                    plotdata = dict(sorted(plotdata.items()))
 
                 elif self.radioButton_12.isChecked():
                     query = """ SELECT
@@ -497,10 +501,13 @@ class Ui_MainWindow(object):
                                     OrderMonth; """
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        if row[0] in months:
-                            plotdata[row[0]].append(row[1])
-                        else:
-                            plotdata[row[0]].append(0)
+                        month = row[0]
+                        plotdata[month].append(row[1])
+                    for month in months:
+                        if month not in plotdata:
+                            plotdata[month].append(0)
+                    plotdata = dict(sorted(plotdata.items()))
+
                 elif self.radioButton_13.isChecked():
                     query = """SELECT
                                     YEAR(CO.orderDate) AS OrderYear,
@@ -540,10 +547,12 @@ class Ui_MainWindow(object):
                                     OrderHour;""".format(self.id())
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        if row[0] in hour:
-                            plotdata[row[0]].append(row[1])
-                        else:
-                            plotdata[row[0]].append(0)
+                        plotdata[row[0]].append(row[1])
+                    for hour in hours:
+                        if hour not in plotdata:
+                            plotdata[hour].append(0)
+                    plotdata = dict(sorted(plotdata.items()))
+
                 elif self.radioButton_10.isChecked():
                     query = """SELECT
                                     CONVERT(DATE, CO.orderDate) AS OrderDate,
@@ -563,10 +572,11 @@ class Ui_MainWindow(object):
                                 """.format(self.id())
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        if row[0] in days:
-                            plotdata[row[0]].append(row[1])
-                        else:
-                            plotdata[row[0]].append(0)
+                        plotdata[row[0].day].append(row[1])
+                    for day in days:
+                        if day not in plotdata:
+                            plotdata[day].append(0)
+                    plotdata = dict(sorted(plotdata.items()))
                             
                 elif self.radioButton_12.isChecked():
                     query = """SELECT
@@ -586,10 +596,11 @@ class Ui_MainWindow(object):
                                 """.format(self.id())
                     data = self.db.execute_read_query(query)
                     for row in data:
-                        if row[0] in months:
-                            plotdata[row[0]].append(row[1])
-                        else:
-                            plotdata[row[0]].append(0)
+                        plotdata[row[0]].append(row[1])
+                    for month in months:
+                        if month not in plotdata:
+                            plotdata[month].append(0)
+                    plotdata = dict(sorted(plotdata.items()))
 
                 elif self.radioButton_13.isChecked():
                     query = """SELECT
@@ -612,36 +623,109 @@ class Ui_MainWindow(object):
                     data = self.db.execute_read_query(query)
                     for row in data:
                         plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
+            
             if self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
                 self.radioButton_17.hide()
+                names=[]
+                ids=[]
                 if self.radioButton_14.isChecked():
                     query = """
-                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        WHERE CONVERT(DATE, CO.orderDate) = GETDATE()
-                        GROUP BY Products.productName;
+                        SELECT DISTINCT
+                            Employee.employeeID,
+                            Employee.empFName,
+                            Employee.empLName
+                        FROM 
+                            Customer_Order CO
+                        JOIN 
+                            Employee ON CO.employeeID = Employee.employeeID
+                        WHERE 
+                            CONVERT(DATE, CO.orderDate) = GETDATE();
                     """
                     data = self.db.execute_read_query(query)
                     if data is not None:
                         for row in data:
-                            plotdata[row[0]].append(row[1])
+                            names.append(row[1] + " " + row[2])
+                            ids.append(row[0])
+                    else:
+                        self.error("No data found for this date")
+                    for id in ids:
+                        query = """SELECT
+                                        DATEPART(HOUR, CO.orderTime) AS OrderHour,
+                                        SUM(COD.quantity * COD.salePrice) AS HourlySales
+                                    FROM 
+                                        Customer_Order CO
+                                    JOIN 
+                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                    WHERE 
+                                        CONVERT(DATE, CO.orderDate) = GETDATE()
+                                        AND CO.employeeID = '{}'
+                                    GROUP BY 
+                                        DATEPART(HOUR, CO.orderTime)
+                                    ORDER BY 
+                                        OrderHour;
+                                    """.format(id)
+                        data = self.db.execute_read_query(query)
+                        for row in data:
+                            plotdata[names[ids.index(id)]].append(row[1])
+                        for hour in hours:
+                            if hour not in plotdata[names[ids.index(id)]]:
+                                plotdata[names[ids.index(id)]].append(0)
+                        # add names as markings
+                        markings = [names[ids.index(id)] for id in ids]
+                        plotdata = dict(sorted(plotdata.items()))
+                        print(plotdata)
     
                 elif self.radioButton_10.isChecked():
                     query = """
-                        SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
-                        FROM Customer_Order CO
-                        JOIN Customer_Order_Details COD ON CO.orderID = COD.orderID
-                        JOIN Products ON COD.productID = Products.productID
-                        WHERE MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
-                            AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
-                        GROUP BY Products.productName;
+                        SELECT DISTINCT
+                            Employee.employeeID,
+                            Employee.empFName,
+                            Employee.empLName
+                        FROM
+                            Customer_Order CO
+                        JOIN
+                            Employee ON CO.employeeID = Employee.employeeID
+                        WHERE
+                            MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE());
                     """
                     data = self.db.execute_read_query(query)
                     if data is not None:
                         for row in data:
-                            plotdata[row[0]].append(row[1])
+                            names.append(row[1] + " " + row[2])
+                            ids.append(row[0])
+                    else:
+                        self.error("No data found for this month")
+                    for id in ids:
+                        query = """
+                            SELECT
+                                DAY(CO.orderDate) AS OrderDay,
+                                SUM(COD.quantity * COD.salePrice) AS DailySales
+                            FROM
+                                Customer_Order CO
+                            JOIN
+                                Customer_Order_Details COD ON CO.orderID = COD.orderID
+                            WHERE
+                                MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                    AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                    AND CO.employeeID = '{}'
+                            GROUP BY
+                                DAY(CO.orderDate)
+                            ORDER BY
+                                OrderDay;
+                        """.format(id)
+                        data = self.db.execute_read_query(query)
+                        for row in data:
+                            plotdata[names[ids.index(id)]].append(row[1])
+                        for day in days:
+                            if day not in plotdata[names[ids.index(id)]]:
+                                plotdata[names[ids.index(id)]].append(0)
+                        # add names as markings
+                        markings = [names[ids.index(id)] for id in ids]
+                        plotdata = dict(sorted(plotdata.items()))
+                        print(plotdata)
+                    
+
                 elif self.radioButton_12.isChecked():
                     query = """
                         SELECT Products.productName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -711,7 +795,8 @@ class Ui_MainWindow(object):
                     data = self.db.execute_read_query(query)
                     if data is not None:
                         for row in data:
-                            plotdata[row[0] + " " + row[1]].append(row[2])
+                            key = row[0] + " " + row[1]
+                            plotdata[key].append(row[2])
                 elif self.radioButton_13.isChecked():
                     query = """
                         SELECT Employee.empFName, Employee.empLName, SUM(COD.quantity * COD.salePrice) AS Sales
@@ -955,7 +1040,6 @@ class Ui_MainWindow(object):
                 pass
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
                 pass
-        
         self.plot(plotdata)
         
         
@@ -977,11 +1061,8 @@ class Ui_MainWindow(object):
         elif self.radioButton_17.isChecked():
             self.linechart(data)    
     def bar(self,data):
-        x = []
-        y = []
-        for i in range(len(data)):
-            x.append(list(data.keys())[i])
-            y.append(list(data.values())[i])
+        x = list(data.keys())
+        y = [item[0] for item in data.values()]
         print(x)
         print(y)
         plt.bar(x,y)
@@ -989,17 +1070,15 @@ class Ui_MainWindow(object):
         
 
     def pie(self,data):
-        data_to_plot = []
-        for i in range(len(data)):
-            data_to_plot.append(data[i][1])
-        plt.pie(data_to_plot)
+        x = list(data.keys())
+        y = [item[0] for item in data.values()]
+        plt.pie(y,labels=x)
         plt.show()
 
     def linechart(self,data):
-        data_to_plot = []
-        for i in range(len(data)):
-            data_to_plot.append(data[i][1])
-        plt.plot(data_to_plot)
+        x = list(data.keys())
+        y = [item[0] for item in data.values()]
+        plt.plot(x,y)
         plt.show()
 
     def error(self,message):
