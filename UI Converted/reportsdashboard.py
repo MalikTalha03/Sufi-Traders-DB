@@ -629,7 +629,6 @@ class Ui_MainWindow(object):
                         plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
             elif self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
                 if self.comboBox.currentText() == "All Products":
-                    print("all products")
                     if self.radioButton_14.isChecked():
                         query = """SELECT DISTINCT
                                         Products.productID,
@@ -723,9 +722,7 @@ class Ui_MainWindow(object):
                             plotdata = dict(sorted(plotdata.items()))
                             pltdata[mrkng] = plotdata
                             plotdata = defaultdict(list)
-                            specsignal = True  
-                            print(pltdata)
-                            print(plotdata)                      
+                            specsignal = True                       
                     elif self.radioButton_12.isChecked():
                         query = """SELECT DISTINCT
                                         Products.productID,
@@ -1337,12 +1334,16 @@ class Ui_MainWindow(object):
                                             OrderHour;""".format(id)
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
+                                plotdata[row[0]].append(row[1])
                             for hour in hours:
-                                if hour not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
+                                if hour not in plotdata[row[0]]:
+                                    plotdata[hour].append(0)
+                            plotdata = dict(sorted(plotdata.items()))
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
                             
-
 
                     elif self.radioButton_10.isChecked():
                         query = """
@@ -1383,13 +1384,15 @@ class Ui_MainWindow(object):
                                     OrderDay;""".format(id)
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
+                                plotdata[row[0]].append(row[1])
                             for day in days:
-                                if day not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
+                                if day not in plotdata[row[0]]:
+                                    plotdata[day].append(0)
                             plotdata = dict(sorted(plotdata.items()))
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
 
                     elif self.radioButton_12.isChecked():
                         query = """
@@ -1428,13 +1431,15 @@ class Ui_MainWindow(object):
                                     OrderMonth;""".format(id)
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
+                                plotdata[row[0]].append(row[1])
                             for month in months:
-                                if month not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
+                                if month not in plotdata[row[0]]:
+                                    plotdata[month].append(0)
                             plotdata = dict(sorted(plotdata.items()))
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
 
                     elif self.radioButton_13.isChecked():
                         query = """
@@ -1473,13 +1478,12 @@ class Ui_MainWindow(object):
                                     OrderDate;""".format(id, self.dateEdit.text(), self.dateEdit_2.text())
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
-                            for day in days:
-                                if day not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
+                                plotdata[row[0]].append(row[1])
                             plotdata = dict(sorted(plotdata.items()))
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
 
                 elif self.comboBox.currentText() != "All Categories":
                     if self.radioButton_14.isChecked():
@@ -1526,7 +1530,6 @@ class Ui_MainWindow(object):
                             for hour in hours:
                                 if hour not in plotdata[names[ids.index(id)]]:
                                     plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
                             markings = [names[ids.index(id)] for id in ids]
 
                     elif self.radioButton_10.isChecked():
@@ -1677,6 +1680,7 @@ class Ui_MainWindow(object):
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Cash Flow":
                 if self.radioButton_14.isChecked():
                     query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE transactionDate = GETDATE()"
+                    data = 
                 elif self.radioButton_10.isChecked():
                     query = "SELECT SUM(totalAmount) FROM Customer_Transactions WHERE MONTH(transactionDate) = MONTH(GETDATE()) AND YEAR(transactionDate) = YEAR(GETDATE())"
                 elif self.radioButton_12.isChecked():
@@ -1884,8 +1888,7 @@ class Ui_MainWindow(object):
 
         for i, (name, sales_data) in enumerate(data.items()):
             hours = list(sales_data.keys())
-            sales = [sum(sales_list) for sales_list in sales_data.values()]
-
+            sales = [sum(sales_list) for sales_list in sales_data.values()]                
             plt.bar(index + i * bar_width, sales, bar_width, label=name)
 
         plt.xticks(index + bar_width * (num_names - 1) / 2, hours)
@@ -1896,14 +1899,9 @@ class Ui_MainWindow(object):
         for name, sales_data in data.items():
             hours = list(sales_data.keys())
             sales = [sum(sales_list) for sales_list in sales_data.values()]
-
             plt.plot(hours, sales, label=name)
-
         plt.legend()
         plt.show()
-    
-
-
     def error(self,message):
         from PyQt6.QtWidgets import QMessageBox
         msg = QMessageBox()
