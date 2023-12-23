@@ -402,6 +402,8 @@ class Ui_MainWindow(object):
         self.pushButton.show()
         self.pushButton_2.show()
         self.pushButton_3.show()
+        if self.radioButton_6.text() == "By Product" and self.comboBox.currentText() == "All Products":
+            self.radioButton_11.hide()
 
     def clearsub(self):
         self.dateEdit.hide()
@@ -428,11 +430,13 @@ class Ui_MainWindow(object):
 
     def radiodata(self):
         query = ""
+        specsignal = False
         data = []
         names=[]
         ids=[]
         markings = []
         plotdata = defaultdict(list)
+        pltdata = defaultdict(list)
         hours = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
         days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,
                 15,16,17,18,19,20,21,22,23,24,25,26,
@@ -531,7 +535,6 @@ class Ui_MainWindow(object):
                     for row in data:
                         plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
                         self.radioButton_17.hide()
-                    print(plotdata)
             elif self.radioButton_5.isChecked() and self.radioButton_5.text() == "By Customer":
                 if self.radioButton_14.isChecked():
                     query = """ SELECT
@@ -577,7 +580,6 @@ class Ui_MainWindow(object):
                     for day in days:
                         if day not in plotdata:
                             plotdata[day].append(0)
-                    print(plotdata)
                     plotdata = dict(sorted(plotdata.items()))
                             
                 elif self.radioButton_12.isChecked():
@@ -627,6 +629,7 @@ class Ui_MainWindow(object):
                         plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2]) # row[0] is the year, row[1] is the month, row[2] is the sales
             elif self.radioButton_6.isChecked() and self.radioButton_6.text() == "By Product":
                 if self.comboBox.currentText() == "All Products":
+                    print("all products")
                     if self.radioButton_14.isChecked():
                         query = """SELECT DISTINCT
                                         Products.productID,
@@ -662,13 +665,16 @@ class Ui_MainWindow(object):
                                             OrderHour;""".format(id)
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
+                                plotdata[row[0]].append(row[1])
                             for hour in hours:
-                                if hour not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
+                                if hour not in plotdata:
+                                    plotdata[hour].append(0)
                             plotdata = dict(sorted(plotdata.items()))
+                            # add name of id as a single marking
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
 
                     elif self.radioButton_10.isChecked():
                         query = """SELECT DISTINCT
@@ -705,16 +711,21 @@ class Ui_MainWindow(object):
                                             DAY(CO.orderDate)
                                         ORDER BY
                                             OrderDay;""".format(id)
+                            
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
+                                plotdata[row[0]].append(row[1])
                             for day in days:
-                                if day not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
+                                if day not in plotdata.keys():
+                                    plotdata[day].append(0)
+                            # add name of id as a single marking
+                            mrkng = names[ids.index(id)]
                             plotdata = dict(sorted(plotdata.items()))
-                                
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True  
+                            print(pltdata)
+                            print(plotdata)                      
                     elif self.radioButton_12.isChecked():
                         query = """SELECT DISTINCT
                                         Products.productID,
@@ -751,13 +762,16 @@ class Ui_MainWindow(object):
                                             OrderMonth;""".format(id)
                             data = self.db.execute_read_query(query)
                             for row in data:
-                                plotdata[names[ids.index(id)]].append(row[1])
+                                plotdata[row[0]].append(row[1])
                             for month in months:
-                                if month not in plotdata[names[ids.index(id)]]:
-                                    plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
+                                if month not in plotdata:
+                                    plotdata[month].append(0)
                             plotdata = dict(sorted(plotdata.items()))
+                            # add name of id as a single marking
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
 
                     elif self.radioButton_13.isChecked():
                         query = """SELECT DISTINCT
@@ -799,9 +813,11 @@ class Ui_MainWindow(object):
                             data = self.db.execute_read_query(query)
                             for row in data:
                                 plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2])
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
-                            plotdata = dict(sorted(plotdata.items()))
+                            # add name of id as a single marking
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
                 else:
                     if self.radioButton_14.isChecked():
                         query = """SELECT
@@ -893,8 +909,7 @@ class Ui_MainWindow(object):
                                         OrderMonth;""".format(self.id(),self.dateEdit.text(), self.dateEdit_2.text())
                         data = self.db.execute_read_query(query)
                         for row in data:
-                            plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2])
-                            
+                            plotdata[str(row[1])+"-"+str(int(str(row[0])[-2:]))].append(row[2])            
             elif self.radioButton_7.isChecked() and self.radioButton_7.text() == "By Employee":
                 if self.comboBox.currentText() == "All Employees":
                     if self.radioButton_14.isChecked():
@@ -939,11 +954,11 @@ class Ui_MainWindow(object):
                             for hour in hours:
                                 if hour not in plotdata[names[ids.index(id)]]:
                                     plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print("plot data ",plotdata)
-                            print("markings ", markings)
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
 
                     elif self.radioButton_10.isChecked():
                         query = """
@@ -990,10 +1005,11 @@ class Ui_MainWindow(object):
                             for day in days:
                                 if day not in plotdata[names[ids.index(id)]]:
                                     plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
                     elif self.radioButton_12.isChecked():
                         query = """
                             SELECT DISTINCT
@@ -1036,10 +1052,12 @@ class Ui_MainWindow(object):
                             for month in months:
                                 if month not in plotdata[names[ids.index(id)]]:
                                     plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
+
                     elif self.radioButton_13.isChecked():
                         query = """
                             SELECT DISTINCT
@@ -1082,10 +1100,11 @@ class Ui_MainWindow(object):
                             for day in days:
                                 if day not in plotdata[names[ids.index(id)]]:
                                     plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
+                            mrkng = names[ids.index(id)]
+                            pltdata[mrkng] = plotdata
+                            plotdata = defaultdict(list)
+                            specsignal = True
                 elif self.comboBox.currentText() != "All Employees":
                     if self.radioButton_14.isChecked():
                         query = """
@@ -1134,7 +1153,6 @@ class Ui_MainWindow(object):
                             # add names as markings
                             markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
 
                     elif self.radioButton_10.isChecked():
                         query = """
@@ -1186,7 +1204,6 @@ class Ui_MainWindow(object):
                             # add names as markings
                             markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
                     elif self.radioButton_12.isChecked():
                         query = """
                             SELECT DISTINCT
@@ -1234,7 +1251,6 @@ class Ui_MainWindow(object):
                             # add names as markings
                             markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
                     elif self.radioButton_13.isChecked():
                         query = """
                             SELECT DISTINCT
@@ -1282,7 +1298,6 @@ class Ui_MainWindow(object):
                             # add names as markings
                             markings = [names[ids.index(id)] for id in ids]
                             plotdata = dict(sorted(plotdata.items()))
-                            print(plotdata)
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "By Category":
                 if self.comboBox.currentText() == "All Categories":
                     if self.radioButton_14.isChecked():
@@ -1326,9 +1341,8 @@ class Ui_MainWindow(object):
                             for hour in hours:
                                 if hour not in plotdata[names[ids.index(id)]]:
                                     plotdata[names[ids.index(id)]].append(0)
-                            # add names as markings
-                            markings = [names[ids.index(id)] for id in ids]
-                            plotdata = dict(sorted(plotdata.items()))
+                            
+
 
                     elif self.radioButton_10.isChecked():
                         query = """
@@ -1659,7 +1673,6 @@ class Ui_MainWindow(object):
                                     plotdata[names[ids.index(id)]].append(0)
                             # add names as markings
                             markings = [names[ids.index(id)] for id in ids]
-
         elif self.radioButton_2.isChecked():
             if self.radioButton_9.isChecked() and self.radioButton_9.text() == "Cash Flow":
                 if self.radioButton_14.isChecked():
@@ -1765,11 +1778,16 @@ class Ui_MainWindow(object):
                 pass
             elif self.radioButton_8.isChecked() and self.radioButton_8.text() == "Low Stock Alert":
                 pass
-        if markings == []:
-            self.plot(plotdata)
+        if pltdata == {} and plotdata == {}: 
+            self.error("No data found for this query")
+            return 
+        if specsignal:
+            self.plotspecial(pltdata)
         else:
-            self.plot(plotdata,markings)
-        
+            if all(value[0] == 0 for value in plotdata.values()):
+                self.error("No data found for this query")
+                return
+            self.plot(plotdata)
         
     def id(self):
         name = self.comboBox.currentText()
@@ -1792,39 +1810,64 @@ class Ui_MainWindow(object):
         else:
             self.error("No ID found for this name")
     
-    def plot(self,data,markings=None):
-        print("plot")
-        if markings is not None:
-            if self.radioButton_15.isChecked():
-                self.bar(data,markings)
-            elif self.radioButton_11.isChecked():
-                self.pie(data,markings)
-            elif self.radioButton_17.isChecked():
-                self.linechart(data,markings)
-        else:
-            if self.radioButton_15.isChecked():
-                self.bar(data)
-            elif self.radioButton_11.isChecked():
-                self.pie(data)
-            elif self.radioButton_17.isChecked():
-                self.linechart(data)    
-    def bar(self,data,markings=None):
-        
+    def plot(self,data):
+        if self.radioButton_15.isChecked():
+            self.bar(data)
+        elif self.radioButton_11.isChecked():
+            self.pie(data)
+        elif self.radioButton_17.isChecked():
+            self.linechart(data)  
+    def plotspecial(self,data):
+        if self.radioButton_15.isChecked():
+            self.barspec(data)
+        elif self.radioButton_17.isChecked():
+            self.linechartspec(data)
+    def bar(self,data):
         x = list(data.keys())
         y = [item[0] for item in data.values()]
-        
-        if markings == []:
-            plt.bar(x,y)
-            
-        else:
-            plt.bar(x,y,tick_label=markings)
+        plt.bar(x,y)
         plt.show()
-        
 
-    def pie(self,data):
+    def pie(self, data):
+        import numpy as np
         x = list(data.keys())
-        y = [item[0] for item in data.values()]
-        plt.pie(y,labels=x)
+        labels = []
+        y = []
+        if self.radioButton_14.isChecked():
+            for i in range(0, len(x), 4):
+                label_range = f"{x[i]}-{x[i + 3]}" if i + 3 < len(x) else f"{x[i]}-{x[-1]}"
+                labels.append(label_range)
+                y_values = [data[key][0] for key in x[i:i + 4]]
+                total_sales = sum(y_values)
+                y.append(total_sales)
+        elif self.radioButton_10.isChecked():
+            for i in range(0, len(x), 8):
+                label_range = f"{x[i]}-{x[i + 7]}" if i + 7 < len(x) else f"{x[i]}-{x[-1]}"
+                labels.append(label_range)
+                y_values = [data[key][0] for key in x[i:i + 8]]
+                total_sales = sum(y_values)
+                y.append(total_sales)
+        elif self.radioButton_12.isChecked():
+            for i in range(0, len(x), 3):
+                label_range = f"{x[i]}-{x[i + 2]}" if i + 2 < len(x) else f"{x[i]}-{x[-1]}"
+                labels.append(label_range)
+                y_values = [data[key][0] for key in x[i:i + 3]]
+                total_sales = sum(y_values)
+                y.append(total_sales)
+        else:
+            for i in range(0, len(x), 4):
+                label_range = f"{x[i]}-{x[i + 3]}" if i + 3 < len(x) else f"{x[i]}-{x[-1]}"
+                labels.append(label_range)
+                y_values = [data[key][0] for key in x[i:i + 4]]
+                total_sales = sum(y_values)
+                y.append(total_sales)
+        colors = plt.cm.Dark2(np.arange(len(labels)))
+        wedges, texts, autotexts = plt.pie(y, labels=labels, autopct='%1.1f%%', colors=colors)
+
+        for text, autotext, color in zip(texts, autotexts, colors):
+            text.set_color(color)
+            autotext.set_color(color)
+        plt.legend(labels, loc="upper left", bbox_to_anchor=(1, 1))
         plt.show()
 
     def linechart(self,data):
@@ -1832,6 +1875,34 @@ class Ui_MainWindow(object):
         y = [item[0] for item in data.values()]
         plt.plot(x,y)
         plt.show()
+
+    def barspec(self,data):
+        import numpy as np
+        num_names = len(data)
+        bar_width = 0.35  
+        index = np.arange(len(list(data.values())[0]))  
+
+        for i, (name, sales_data) in enumerate(data.items()):
+            hours = list(sales_data.keys())
+            sales = [sum(sales_list) for sales_list in sales_data.values()]
+
+            plt.bar(index + i * bar_width, sales, bar_width, label=name)
+
+        plt.xticks(index + bar_width * (num_names - 1) / 2, hours)
+        plt.legend()
+        plt.show()
+
+    def linechartspec(self,data):
+        for name, sales_data in data.items():
+            hours = list(sales_data.keys())
+            sales = [sum(sales_list) for sales_list in sales_data.values()]
+
+            plt.plot(hours, sales, label=name)
+
+        plt.legend()
+        plt.show()
+    
+
 
     def error(self,message):
         from PyQt6.QtWidgets import QMessageBox
