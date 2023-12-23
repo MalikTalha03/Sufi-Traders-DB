@@ -1,13 +1,14 @@
 SELECT
-                                        DATEPART(HOUR, CO.orderTime) AS OrderHour,
-                                        ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS HourlySales
-                                    FROM
-                                        Customer_Order CO
-                                    LEFT JOIN
-                                        Customer_Order_Details COD ON CO.orderID = COD.orderID
-                                    WHERE
-                                        COD.productID = 1 AND CONVERT(DATE, CO.orderDate) = GETDATE()
-                                    GROUP BY
-                                        DATEPART(HOUR, CO.orderTime)
-                                    ORDER BY
-                                        OrderHour;
+                                            DAY(CO.orderDate) AS OrderDay,
+                                            ISNULL(SUM(COD.quantity * COD.salePrice), 0) AS DailySales
+                                        FROM
+                                            Customer_Order CO
+                                        LEFT JOIN
+                                            Customer_Order_Details COD ON CO.orderID = COD.orderID
+                                        WHERE
+                                            COD.productID = 1 AND MONTH(CONVERT(DATE, CO.orderDate)) = MONTH(GETDATE())
+                                                AND YEAR(CONVERT(DATE, CO.orderDate)) = YEAR(GETDATE())
+                                        GROUP BY
+                                            DAY(CO.orderDate)
+                                        ORDER BY
+                                            OrderDay;
