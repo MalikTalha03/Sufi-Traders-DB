@@ -104,3 +104,14 @@ CREATE TABLE Supplier_Transactions (
     orderID int FOREIGN KEY REFERENCES Supplier_Order(orderID) NOT NULL,
     transactionDate date NOT NULL
 );
+
+CREATE TABLE Employee_Session (
+    sessionID int PRIMARY KEY,
+    empID int FOREIGN KEY REFERENCES Employee(employeeID) NOT NULL,
+    loginTime datetime NOT NULL,
+    lastActivityTime datetime NOT NULL,
+    logoutTime datetime,
+    currStatus varchar(15) NOT NULL,
+    timeoutMinutes int NOT NULL,
+    CONSTRAINT status CHECK (currStatus IN ('Active', 'Inactive'))
+);
