@@ -15,6 +15,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.custindata = True
         self.custinfo = {}
         self.db = DatabaseManager()
+        self.empid = None
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -72,6 +73,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         self.pushButton.clicked.connect(lambda: self.addtodb())
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.findemp()
         
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -91,6 +93,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         item = self.tableWidget.horizontalHeaderItem(4)
         item.setText(_translate("MainWindow", "Total"))
         
+    def findemp(self):
+        name, self.empid = self.db.curr_loggedin()
+
     def populate_table(self):
         self.lineEdit_6.setText('{}'.format(self.orderno))
         self.lineEdit_7.setText('{}'.format(self.total))
@@ -116,7 +121,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
                 else:
                     self.cid = 1
                 self.db.execute_query("INSERT INTO Customers VALUES ({}, '{}', '{}', '{}')".format(self.cid,self.custinfo['fname'], self.custinfo['lname'], self.custinfo['phone']))  
-        self.db.execute_query("INSERT INTO Customer_Order VALUES ('{}', '{}', 1, '{}', '{}','Credit')".format(self.orderno, self.cid, order_date, order_time))
+        self.db.execute_query("INSERT INTO Customer_Order VALUES ('{}', '{}','{}', '{}', '{}','Credit')".format(self.orderno, self.cid,self.empid ,order_date, order_time))
         for data in self.data:
             rows = self.db.execute_read_query("SELECT * FROM Products WHERE productID = '{}'".format(data['pid']))
             if rows:
@@ -156,11 +161,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
         shop_address = "Railway Road, Bhakkar"
         shop_contact = "0333-6845939"
         receipt += "--------------------------------\n"
-        receipt += "            {}\n".format(shop_name)
+        receipt += "    {}\n".format(shop_name)
         receipt += "    {}\n".format(shop_address)
         receipt += "    {}\n".format(shop_contact)
         receipt += "--------------------------------\n"
-        receipt += "Order ID: {}\n".format(self.orderno)
+        receipt += "Order ID: {}  Employee ID: {}\n".format(self.orderno, self.empid)
+        receipt += "Date: {}\n".format(datetime.now().date().strftime('%Y-%m-%d'))
         receipt += "--------------------------------\n"
         receipt += "Product Name      Price     Qty\n"
         receipt += "--------------------------------\n"
