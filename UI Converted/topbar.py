@@ -24,6 +24,10 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menuReports.setObjectName("menuReports")
         self.menuReports.setTitle("Reports")
 
+        self.menulogout = QtWidgets.QMenu(self)
+        self.menulogout.setObjectName("menulogout")
+        self.menulogout.setTitle("Logout")
+
         self.setupActions()
 
     def setupActions(self):
@@ -137,6 +141,17 @@ class MenuBar(QtWidgets.QMenuBar):
         self.actionProductSales.setText("Product Sales")
         self.actionProductSales.triggered.connect(self.prodsale)
 
+        self.actionCustomReports = QtGui.QAction(self)
+        self.actionCustomReports.setObjectName("actionCustomReports")
+        self.actionCustomReports.setText("Custom Reports")
+        self.actionCustomReports.triggered.connect(self.customReports)
+
+        # Logout menu actions
+        self.actionLogout = QtGui.QAction(self)
+        self.actionLogout.setObjectName("actionLogout")
+        self.actionLogout.setText("Logout")
+        self.actionLogout.triggered.connect(self.logout)
+
         self.menuCustomer.addAction(self.actionNew_Order)
         self.menuCustomer.addAction(self.actionGet_Paid)
         self.menuCustomer.addAction(self.actionFind_Order)
@@ -161,12 +176,16 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menuReports.addAction(self.actionTopSelling)
         self.menuReports.addAction(self.actionSales)
         self.menuReports.addAction(self.actionProductSales)
+        self.menuReports.addAction(self.actionCustomReports)
+
+        self.menulogout.addAction(self.actionLogout)
 
         self.addMenu(self.menuCustomer)
         self.addMenu(self.menuSupplier)
         self.addMenu(self.menuProduct)
         self.addMenu(self.menuEmployee)
         self.addMenu(self.menuReports)
+        self.addMenu(self.menulogout)
 
     def new_order(self):
         from form import Ui_MainWindow
@@ -310,6 +329,33 @@ class MenuBar(QtWidgets.QMenuBar):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.win)
         self.win.show()
+    
+    def logout(self):
+        from db import DatabaseManager
+        from datetime import datetime
+        self.db = DatabaseManager()
+        curr_logged_in = self.db.execute_read_query("SELECT * FROM Employee_Session WHERE currStatus = 'Active'")
+        if curr_logged_in:
+            for row in curr_logged_in:
+                self.db.execute_query("UPDATE Employee_Session SET currStatus = 'Inactive', logoutTime = '{}' WHERE sessionID = '{}'".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), row[0]))
+            msg = QtWidgets.QMessageBox()
+            msg.setWindowTitle("Success")
+            msg.setText("Logged out Successfully")
+            msg.exec()            
+        from Login import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+        self.parent().close()
+
+    def customReports(self):
+        from reportsdashboard import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show() 
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
