@@ -10,6 +10,7 @@ import calendar
 class Ui_MainWindow(object):
     def __init__(self):
         self.db = DatabaseManager()
+        self.name = None
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -17,7 +18,7 @@ class Ui_MainWindow(object):
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.label = QtWidgets.QLabel(parent=self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(50, 20, 131, 41))
+        self.label.setGeometry(QtCore.QRect(440, 20, 131, 41))
         font = QtGui.QFont()
         font.setPointSize(16)
         font.setBold(True)
@@ -28,9 +29,8 @@ class Ui_MainWindow(object):
         self.widget.setObjectName("widget")
         self.lineEdit = QtWidgets.QLineEdit(parent=self.centralwidget)
         self.lineEdit.setEnabled(False)
-        self.lineEdit.setGeometry(QtCore.QRect(230, 20, 141, 41))
+        self.lineEdit.setGeometry(QtCore.QRect(620, 20, 141, 41))
         self.lineEdit.setObjectName("lineEdit")
-        MainWindow.setCentralWidget(self.centralwidget)
         self.label_2 = QtWidgets.QLabel(parent=self.centralwidget)
         self.label_2.setGeometry(QtCore.QRect(370, 510, 101, 21))
         font = QtGui.QFont()
@@ -38,11 +38,20 @@ class Ui_MainWindow(object):
         font.setBold(True)
         self.label_2.setFont(font)
         self.label_2.setObjectName("label_2")
+        self.label_3 = QtWidgets.QLabel(parent=self.centralwidget)
+        self.label_3.setGeometry(QtCore.QRect(30, 20, 381, 41))
+        font = QtGui.QFont()
+        font.setPointSize(16)
+        font.setBold(True)
+        self.label_3.setFont(font)
+        self.label_3.setObjectName("label_3")
+        MainWindow.setCentralWidget(self.centralwidget)
         menubar = MenuBar(MainWindow)
         MainWindow.setMenuBar(menubar)
         self.statusbar = QtWidgets.QStatusBar(parent=MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.emp()
         self.todaysales()
         self.plot()
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -54,7 +63,11 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "Dashboard"))
         self.label.setText(_translate("MainWindow", "Today Sales"))
         self.label_2.setText(_translate("MainWindow", "Monthly Sales"))
+        self.label_3.setText(_translate("MainWindow", "Welcome " + self.name))
     
+    def emp(self):
+        self.name,id = self.db.curr_loggedin()
+        
     def plot(self):
         total_sales_per_day = {day: 0 for day in range(1, calendar.monthrange(datetime.now().year, datetime.now().month)[1] + 1)}
         query = """
