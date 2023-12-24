@@ -28,5 +28,19 @@ class DatabaseManager:
         result = self.cursor.fetchall()
         return result
     
+    def curr_loggedin(self):
+        rows = self.execute_read_query(
+            """
+                SELECT E.empFName + ' ' + ISNULL(E.empLName, '') AS EmployeeUsername, ES.empID 
+                FROM Employee_Session ES
+                JOIN Employee E ON ES.empID = E.employeeID
+                WHERE ES.currStatus = 'Active';
+            """)
+        if rows:
+            for row in rows:
+                name = row[0]
+                id = row[1]
+                return name , id
+    
     def close_connection(self):
         self.db.close()
