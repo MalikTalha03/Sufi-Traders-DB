@@ -1,10 +1,13 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from db import DatabaseManager
 import hashlib
+from datetime import datetime
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
+        super(Ui_MainWindow, self).__init__()
         self.db = DatabaseManager()
+        self.empid = None
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -62,7 +65,7 @@ class Ui_MainWindow(object):
         self.lineEdit.returnPressed.connect(lambda: self.lineEdit_2.setFocus())
         self.lineEdit_2.returnPressed.connect(lambda: self.pushButton.setFocus())
         self.pushButton.clicked.connect(self.login)
-
+        self.checkloggedin()
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -92,6 +95,13 @@ class Ui_MainWindow(object):
                     msg.setWindowTitle("Success")
                     msg.setText("Login Successful")
                     msg.exec()
+                    max_id = self.db.execute_read_query("SELECT MAX(sessionID) FROM Employee_Session")[0][0]
+                    if max_id == None:
+                        max_id = 1
+                    else:
+                        max_id += 1
+                    self.db.execute_query("Insert into Employee_Session values('{}', '{}', '{}', '{}', '{}', '{}','{}')".format(max_id,row[0],datetime.now().strftime("%Y-%m-%d %H:%M:%S"),datetime.now().strftime("%Y-%m-%d %H:%M:%S"),'','Active',8*60))
+                    self.opendashboard()
                 else:
                     msg = QtWidgets.QMessageBox()
                     msg.setWindowTitle("Error")
@@ -102,11 +112,32 @@ class Ui_MainWindow(object):
             msg.setWindowTitle("Error")
             msg.setText("Incorrect Username")
             msg.exec()
+    def opendashboard(self):
+        from Dashboard import Ui_MainWindow
+        self.win = QtWidgets.QMainWindow()
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self.win)
+        self.win.show()
+        self.close()
+    def checkloggedin(self):
+        rows = self.db.execute_read_query("SELECT * FROM Employee_Session WHERE currStatus = 'Active'")
+        if rows:
+            for row in rows:
+                self.empid = row[1]
+                return True
+        else:
+            return False
+        
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec())
+    res = ui.checkloggedin()
+    if res == False:
+        MainWindow.show()
+        sys.exit(app.exec())
+    else:
+        ui.opendashboard()
+        sys.exit(app.exec())
