@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets, QtSql
-import pyodbc
 from db import DatabaseManager
 class Ui_Form(object):
     def __init__(self):

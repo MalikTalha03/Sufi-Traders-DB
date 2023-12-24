@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-import pyodbc
 from datetime import datetime
 from db import DatabaseManager
 class Ui_MainWindow(QtWidgets.QMainWindow):
