@@ -157,6 +157,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.menuCustomer.addAction(self.actionFind_Order)
         self.menuCustomer.addAction(self.actionUpdate_Customer)
         self.menuCustomer.addAction(self.actionGet_All_Orders)
+        self.menuCustomer.addAction(self.actionRefundOrder)
 
         self.menuSupplier.addAction(self.actionNew_Order_2)
         self.menuSupplier.addAction(self.actionPay_Supplier)
